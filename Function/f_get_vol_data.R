@@ -19,7 +19,7 @@ f_get_vol_data <- function() {
   #          constituants du Dow Jones choisit.
   
   # Import data from csv
-  df_vol   <- read.csv(here("Raw_Data", "data_vol.csv"))        # volatility
+  df_vol   <- read.csv(here("Raw_Data", "data_vol_small.csv"))        # volatility
 
   # Retain needed columns
   df_vol <- df_vol[, c("ticker", "date", "days", "delta", "impl_volatility")]
