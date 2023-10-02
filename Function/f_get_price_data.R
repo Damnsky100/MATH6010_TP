@@ -13,7 +13,7 @@ f_get_price_data <- function() {
   #   xts_price: [xts_object] (N x C) de prix journalier des constituants choisit
 
   # Import data from csv
-  df_price <- read.csv(here("Raw_Data", "data_price_small.csv"))      
+  df_price <- read.csv(here("Raw_Data", "data_price.csv"))      
   df_price <- df_price[, c("ticker", "date", "close")]
   
   return(df_price)
