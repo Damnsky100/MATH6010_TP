@@ -1,38 +1,44 @@
 library("xts")
 library("here")
 
-f_compute_vol_ratios <- function(stock_pairs, list_vols, list_prices) {
-  ### Cette fonction crée les ratios de volatilités ainsi que ratio de prix.
+f_compute_vol_ratios <- function(unique_pairs, list_vols, list_prices) {
+  ### Cette fonction crée les ratios de volatilités ainsi que les ratio de prix.
   
   #  Inputs
-  #   stock_pairs: [vector] (2 x 1) vecteur contenant les pairs de stocks.
-  #   list_vols: [list] (length of N) liste contenant les de données journalière 
-  #                 de volatilité des constituants du Dow Jones choisit.
-  #   list_prices: [list] (length of N) liste contenant les de données journalière 
-  #                 de prix des constituants du Dow Jones choisit.
-  
+  #   stock_pairs: [character] (2 x 1) le nom de la paire.
+  #   list_vols: [list] (length of N) liste contenant les de données de vol (daily) 
+  #   list_prices: [list] (length of N) liste contenant les de données de prix (daily)
+
   #  OUTPUTS
-  #   merged_data: [list] (length of N) liste contenant les ratios journalier de chacune des paires.
+  #   merged_data: [list] (length of N) liste contenant les ratios pour chaque paires.
+  
+  # Store each ticker
+  ticker_A <- unlist(strsplit(unique_pairs, "/"))[1]  # Numerator
+  ticker_B <- unlist(strsplit(unique_pairs, "/"))[2]  # Denominator
   
   # Store the daily implied vol. of both stock in the pair
-  vol_A <- list_vols[[stock_pairs[1]]]
-  vol_B <- list_vols[[stock_pairs[2]]]
-  
+  vol_A <- list_vols[[ticker_A]] 
+  vol_B <- list_vols[[ticker_B]]
+  # Align the objects together
+  aligned_vol <- merge.xts(vol_A, vol_B, fill= NA)
   #Create ratio 
-  ratio <- vol_A / vol_B
-  colnames(ratio) <- paste("vol_ratio")
+  vol_ratio <- aligned_vol[, 1] / aligned_vol[, 2]
+  colnames(vol_ratio) <- paste("vol_ratio")
   
   # Retrieve the prices from the list_price
-  price_A <- list_prices[[stock_pairs[1]]]
-  price_B <- list_prices[[stock_pairs[2]]]
-  price_ratio <- price_A / price_B
-  # Rename for clarity
-  colnames(price_A) <- paste(stock_pairs[1], "_Price", sep="")
-  colnames(price_B) <- paste(stock_pairs[2], "_Price", sep="")
+  price_A <- list_prices[[ticker_A]]
+  price_B <- list_prices[[ticker_B]]
+  # Align the objects together
+  aligned_price <- merge.xts(price_A, price_B, fill= NA)
+
+  #Create ratio 
+  price_ratio <- aligned_price[, 1] / aligned_price[, 2]
+  colnames(price_A) <- paste(ticker_A, "_Price", sep="")
+  colnames(price_B) <- paste(ticker_B, "_Price", sep="")
   colnames(price_ratio) <- paste("price_ratio")
   
   # Merge ratio with the prices
-  merged_data <- merge.xts(ratio, price_A, price_B, price_ratio)
-  
+  merged_data <- merge.xts(vol_ratio, price_A, price_B, price_ratio)
+
   return(merged_data)
 }
