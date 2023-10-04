@@ -1,9 +1,9 @@
 f_extract_trades <- function(xts_object){
-  ### Cette fonction retrouve toutes les trades executés dans le backtest 
-  ### et les sauve dans un data.frame.
+  ### Cette fonction retrouve toutes les trades executés dans l'historique 
+  ### et les sauvegarde dans un data.frame.
   
   #  Inputs
-  #   xts_object: [xts_object] Un object contenant le backtest d'une paire.
+  #   xts_object: [xts_object] Un object contenant l'historique d'une paire.
   
   #  OUTPUTS
   #   output: [data.frame] (N x C) Data.frame contenant les trades executés dans le backtest.
@@ -20,7 +20,15 @@ f_extract_trades <- function(xts_object){
     # Trade flag is open long or open short
     if(flag %in% c(1, -1)){
       # Store the trade
-      current_trade <- list(start_date=index(xts_object)[i], entry_price=xts_object[i, "entry_price"], direction=flag)
+      current_trade <- list(start_date=index(xts_object)[i], 
+                            entry_price=xts_object[i, "entry_price"], 
+                            direction=flag)
+      # Save important information from the input
+      current_trade$vol_ratio <- xts_object[i, "exit_price"]
+      current_trade$MA_100 <- xts_object[i, "MA_100"]
+      current_trade$up_band <- xts_object[i, "up_band"]
+      current_trade$lo_band <- xts_object[i, "lo_band"]
+      
     # Trade flag is close long or close short
     } else if(flag %in% c(-11, 11) && !is.null(current_trade)){
       # Store the end date
@@ -28,7 +36,7 @@ f_extract_trades <- function(xts_object){
       # Store the exit price
       current_trade$exit_price <- xts_object[i, "exit_price"]
       # Store the trade return
-      current_trade$return <- xts_object[i-1, "PL_curve"]
+      current_trade$return <- xts_object[i-1, "PL_position"]
       # Store profitability flag
       current_trade$profitable <- ifelse(current_trade$return > 0, 1, 0)
       # Store the days in the trade
@@ -44,9 +52,11 @@ f_extract_trades <- function(xts_object){
       current_trade <- NULL
     }
   }
+  
+  
   output <- do.call(rbind, lapply(trades, as.data.frame))
   # Rename 
-  colnames(output)[6] <- "return"
-  colnames(output)[7] <- "profitable"
+  #colnames(output)[6] <- "return"
+  #colnames(output)[7] <- "profitable"
 }
 
