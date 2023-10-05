@@ -303,3 +303,47 @@ init_instance = function(dataPrice, tickers) {
         return(lasso_pred)
 }
 
+
+
+get_stock_data <- function(tickers) {
+  # Initialize a list to store the data
+  data_list <- list()
+  
+  # Loop through each ticker and download the data
+  for(ticker in tickers) {
+    # Get the data from Yahoo Finance
+    stock_data <- getSymbols(ticker, src = "yahoo", auto.assign = FALSE)
+    
+    # Extract the required columns
+    df <- data.frame(
+      date = index(stock_data),
+      ticker = ticker,
+      open = Op(stock_data),
+      high = Hi(stock_data),
+      low = Lo(stock_data),
+      volume = Vo(stock_data),
+      close = Ad(stock_data)
+    )
+    
+    # Store the data in the list
+    data_list[[ticker]] <- df
+  }
+  
+  # Standardize column names for each data frame in the list
+  for (ticker in tickers) {
+    colnames(data_list[[ticker]]) <- c("date", "ticker", "open", "high", "low", "volume", "close")
+  }
+  
+  # Combine all data frames in the list into a single data frame
+  combined_data <- do.call(rbind, data_list)
+  
+  # Convert the 'Close' column to an xts object using the 'date' column as the index
+  close_xts <- xts(combined_data$close, order.by=as.Date(combined_data$date))
+  returns_xts <- Return.calculate(close_xts, method = "simple")
+  combined_data$return <- coredata(returns_xts / 100)
+  combined_data <- combined_data[-1, ]
+  
+  return(combined_data)
+}
+
+
