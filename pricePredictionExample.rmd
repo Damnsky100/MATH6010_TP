@@ -1,0 +1,70 @@
+# Import the librairies from f_elasticNetModel.R
+
+```{r}
+library(lubridate)
+library(PerformanceAnalytics)
+library(here)
+library(xts)
+library(zoo)
+library(TTR)
+library(stats)
+library(caret)
+library(glmnet)
+library(Metrics)
+library(quantmod)
+library(R6)
+
+
+source(here("Function", "f_clean_data.R"))
+source(here("Function", "f_cluster.R"))
+source(here("Function", "f_elasticNetModel.R"))
+
+
+```
+
+
+
+
+```{r}
+#Trouver notre univers d'investissement
+df_clusters_yearly <- f_cluster_DOW(10)
+tickers <- unique(unlist(df_clusters_yearly))
+tickers <- tickers[1:2]
+df_price_path <- "data_price2.csv"
+dataPrice <- read.csv(here("Raw_Data", df_price_path))
+
+# Rouler la création de notre objet + manipulations
+result <- init_instance(dataPrice, tickers)
+
+# Retreive the best elastic net model for each tickers (Just switch GE for the another ticker)
+result$resultsList$GE$model
+
+#Retreive the coefficients of the models for each tickers (Just switch GE for the another ticker)
+result$resultsList$GE$coefficients
+
+#Retreive the MSE (Out of sample - Testing set) for every model (Just switch GE for the another ticker)
+result$resultsList$GE$mse
+
+# Retreive the price predicion in 10 days for the tickers 
+result$pricePrediction
+
+#Retreive l'univers d'investissement
+result$tickers 
+
+
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
