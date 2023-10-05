@@ -13,7 +13,7 @@ library(quantmod)
 library(R6)
 
 source(here("Function", "f_clean_data.R"))
-source(here("Function", "f_cluster_DOW.R"))
+source(here("Function", "f_cluster.R"))
 
 
 
@@ -44,9 +44,6 @@ LassoPrediction <- R6Class("LassoPrediction",
         load_data = function(dataPrice) {
             # Read the CSV file
             self$df_price <- dataPrice
-            
-            # Remove the 'cusip' column
-            self$df_price <- subset(self$df_price, select = -c(cusip))
             
             # Convert the 'date' column to Date type
             self$df_price$date <- as.Date(self$df_price$date, format="%Y-%m-%d")
@@ -109,12 +106,11 @@ LassoPrediction <- R6Class("LassoPrediction",
                 SAR(cbind(Hi(x), Cl(x))) [, 1]
             f_SMI <- function(x)
                 SMI(HLC(x))[, "SMI"]
-            f_Volat <- function(x)
-                volatility(OHLC(x), calc = "garman")[, 1]
+            #f_Volat <- function(x)
+               # volatility(OHLC(x), calc = "garman")[, 1]
 
 
-            #Select the right tickers
-            data <- df_price[df_price$ticker %in% tickers, ]
+        
 
             # Create a base name from ticker by removing any character that is not
             # a number or letter and then converting the results to lower case letters
@@ -124,7 +120,7 @@ LassoPrediction <- R6Class("LassoPrediction",
             data <- self$df_price[self$df_price$ticker %in% ticker, ]
 
 
-            tmp <- subset(data, select = -c(secid, ticker))
+            tmp <- subset(data, select = -c(ticker))
             dates <- as.Date(index(tmp))
             numeric_tmp <- as.data.frame(lapply(tmp, as.numeric))
             data_xts <- xts::as.xts(numeric_tmp, order.by=dates)
