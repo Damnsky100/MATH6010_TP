@@ -217,25 +217,35 @@ LassoPrediction <- R6Class("LassoPrediction",
         
         return(list(model = model_enet_best, predictions = predicTest, coefficients = df_coefs))
         },
-        get_price_prediction = function(testRange) {
-            # Retrieve the prices
-            df <- self$df_price[index(self$df_price) %in% testRange$start:testRange$end, c("ticker", "close")]
-            df <- df[df$ticker %in% self$tickers]
-            df$close <- as.numeric(df$close)
-            list_xts <- split(df$close, self$tickers)
+       get_price_prediction = function(testRange) {
+        # Retrieve the prices
+                df <- self$df_price[index(self$df_price) %in% testRange$start:testRange$end, c("ticker", "close", "date")]
+                df <- df[df$ticker %in% self$tickers]
+                df$close <- as.numeric(df$close)
 
-            # Combine the cleaned xts objects
-            combined_xts <- do.call(cbind, list_xts)
+                # Create an xts object for each ticker using the date information from df
+                list_xts <- lapply(unique(df$ticker), function(ticker) {
+                    xts(df$close[df$ticker == ticker], order.by = as.Date(df$date[df$ticker == ticker]))
+                })
 
-            # Convert the combined xts object to a matrix
-            closePrice <- as.matrix(combined_xts)
-            # Convert all columns of the matrix to numeric
-            self$closePrice <- apply(closePrice, 2, as.numeric)
+                # Combine the cleaned xts objects
+                combined_xts <- do.call(cbind, list_xts)
 
-            self$pricePrediction <- (1 + self$predictionMatrix) * self$closePrice
-            colnames(self$pricePrediction) <- df$date
-            self$pricePrediction
-        }
+                # Convert the combined xts object to a matrix
+                closePrice <- as.matrix(combined_xts)
+                # Convert all columns of the matrix to numeric
+                self$closePrice <- apply(closePrice, 2, as.numeric)
+
+                tmp <- (1 + self$predictionMatrix) * self$closePrice
+                rownames(tmp) <- index(combined_xts)
+                self$pricePrediction <- tmp
+                self$pricePrediction
+            }
+
+
+
+
+
         
     )
 )

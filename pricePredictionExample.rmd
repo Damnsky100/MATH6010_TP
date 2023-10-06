@@ -31,13 +31,11 @@ source(here("Function", "f_elasticNetModel.R"))
 # List of tickers
 df_clusters_yearly <- f_cluster(10)
 tickers <- c("AMAT" , "COST", "DISH" , "GILD",  "GOOGL", "MSFT",  "QCOM", "QRTEA", "RYAAY", "VRTX")
-
 priceData <- get_stock_data(tickers)
+
 summary(priceData)
-nrow(priceData)
 
 
-head(priceData[priceData$ticker == "VRTX", ])
 # Save the 'data' object to an RData file
 save(priceData, file = here("Clean_Data", "stock_data.rda"))
 
@@ -51,7 +49,7 @@ load(here("Clean_Data", "stock_data.rda"))
 #Trouver notre univers d'investissement
 
 # Rouler la création de notre objet + manipulations
-result <- init_instance(dataPrice, tickers)
+result <- init_instance(priceData, tickers)
 
 # Retreive the best elastic net model for each tickers (Just switch GE for the another ticker)
 result$resultsList$GE$model
@@ -63,8 +61,13 @@ result$resultsList$GE$coefficients
 result$resultsList$GE$mse
 
 # Retreive the price predicion in 10 days for the tickers 
-result$pricePrediction
-
+dates <- result$featuresList[[result$tickers[1]]]$date 
+testRange <- result$get_date_range("2017-12-31", "2023-01-01", 0, dates)
+result$pricePrediction 
+res <- as.data.frame(result$pricePrediction)
+rownames(res) <- dates[dates %in% testRange$start:testRange$end]
+colnames(res)<- tickers
+res
 #Retreive l'univers d'investissement
 result$tickers 
 
@@ -73,15 +76,17 @@ result$tickers
 
 
 
-
+## Save in a rda file for efficiency
 ```{r}
 
+save(res, file = here("Clean_Data", "pricePrediction.rda"))
 
 ```
 
 
 
 ```{r}
+
 
 
 ```
