@@ -76,7 +76,7 @@ LassoPrediction <- R6Class("LassoPrediction",
             cumulative_returns <- apply(tmp, 2, PerformanceAnalytics::Return.cumulative)
             dates <- index(data)
             df <- data.frame(cumulative_returns)
-            rownames(df) = dates[1:n_windows]
+            rownames(df) <- dates[1:n_windows]
             df
         },
         
@@ -96,8 +96,6 @@ LassoPrediction <- R6Class("LassoPrediction",
                 Delt(chaikinVolatility(cbind(Hi(x), Lo(x))))[, 1]
             f_CLV <- function(x)
                 EMA(CLV(HLC(x)))[, 1]
-            f_EMV <- function(x)
-                EMV(cbind(Hi(x), Lo(x)), Vo(x))[, 2]
             f_MACD <- function(x)
                 MACD(Cl(x))[, 2]
             f_MFI <- function(x)
@@ -106,8 +104,8 @@ LassoPrediction <- R6Class("LassoPrediction",
                 SAR(cbind(Hi(x), Cl(x))) [, 1]
             f_SMI <- function(x)
                 SMI(HLC(x))[, "SMI"]
-            #f_Volat <- function(x)
-               # volatility(OHLC(x), calc = "garman")[, 1]
+            f_Volat <- function(x)
+               volatility(OHLC(x), calc = "garman")[, 1]
 
 
         
@@ -147,7 +145,6 @@ LassoPrediction <- R6Class("LassoPrediction",
                 bb = coredata(f_BB(data_xtsInput)),
                 chaikin_vol = coredata(f_ChaikinVol(data_xtsInput)),
                 clv = coredata(f_CLV(data_xtsInput)),
-                emv = coredata(f_EMV(data_xtsInput)),
                 macd = coredata(f_MACD(data_xtsInput)),
                 mfi = coredata(f_MFI(data_xtsInput)),
                 sar = coredata(f_SAR(data_xtsInput)),
@@ -163,7 +160,7 @@ LassoPrediction <- R6Class("LassoPrediction",
                             paste0(base_name,"_adjclose_lag2"),
                             paste0(base_name,"_adjclose_lag3"),
                             "atr", "adx", "aaron", "bb", "chaikin_vol", "clv", 
-                            "emv", "macd", "mfi", "sar", "smi", "volat")
+                             "macd", "mfi", "sar", "smi", "volat")
             names(df_ticker) <- col_names
             
             df_ticker
@@ -236,7 +233,7 @@ LassoPrediction <- R6Class("LassoPrediction",
             self$closePrice <- apply(closePrice, 2, as.numeric)
 
             self$pricePrediction <- (1 + self$predictionMatrix) * self$closePrice
-
+            colnames(self$pricePrediction) <- df$date
             self$pricePrediction
         }
         
@@ -305,6 +302,7 @@ init_instance = function(dataPrice, tickers) {
 
 
 
+
 get_stock_data <- function(tickers) {
   # Initialize a list to store the data
   data_list <- list()
@@ -314,13 +312,19 @@ get_stock_data <- function(tickers) {
     # Get the data from Yahoo Finance
     stock_data <- getSymbols(ticker, src = "yahoo", auto.assign = FALSE)
     
+    # Calculate adjusted values
+    adj_factor <- Ad(stock_data) / Cl(stock_data)
+    open_adj <- Op(stock_data) * adj_factor
+    high_adj <- Hi(stock_data) * adj_factor
+    low_adj <- Lo(stock_data) * adj_factor
+    
     # Extract the required columns
     df <- data.frame(
       date = index(stock_data),
       ticker = ticker,
-      open = Op(stock_data),
-      high = Hi(stock_data),
-      low = Lo(stock_data),
+      open = open_adj,
+      high = high_adj,
+      low = low_adj,
       volume = Vo(stock_data),
       close = Ad(stock_data)
     )
@@ -333,6 +337,7 @@ get_stock_data <- function(tickers) {
   for (ticker in tickers) {
     colnames(data_list[[ticker]]) <- c("date", "ticker", "open", "high", "low", "volume", "close")
   }
+
   
   # Combine all data frames in the list into a single data frame
   combined_data <- do.call(rbind, data_list)
