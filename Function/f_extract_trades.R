@@ -24,7 +24,6 @@ f_extract_trades <- function(xts_object){
                             entry_price=xts_object[i, "entry_price"], 
                             direction=flag)
       # Save important information from the input
-      current_trade$vol_ratio <- xts_object[i, "exit_price"]
       current_trade$MA_100 <- xts_object[i, "MA_100"]
       current_trade$up_band <- xts_object[i, "up_band"]
       current_trade$lo_band <- xts_object[i, "lo_band"]
@@ -37,6 +36,8 @@ f_extract_trades <- function(xts_object){
       current_trade$exit_price <- xts_object[i, "exit_price"]
       # Store the trade return
       current_trade$return <- xts_object[i-1, "PL_position"]
+      # Store the trade dollar value
+      current_trade$value <- xts_object[i-1, "Value_position"]
       # Store profitability flag
       current_trade$profitable <- ifelse(current_trade$return > 0, 1, 0)
       # Store the days in the trade
@@ -55,8 +56,5 @@ f_extract_trades <- function(xts_object){
   
   
   output <- do.call(rbind, lapply(trades, as.data.frame))
-  # Rename 
-  #colnames(output)[6] <- "return"
-  #colnames(output)[7] <- "profitable"
 }
 

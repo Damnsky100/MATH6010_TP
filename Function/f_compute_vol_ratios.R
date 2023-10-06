@@ -1,7 +1,7 @@
 library("xts")
 library("here")
 
-f_compute_vol_ratios <- function(unique_pairs, list_vols, list_prices) {
+f_compute_vol_ratios <- function(unique_pair, list_vols, list_prices) {
   ### Cette fonction crée les ratios de volatilités ainsi que les ratio de prix.
   
   #  Inputs
@@ -13,8 +13,8 @@ f_compute_vol_ratios <- function(unique_pairs, list_vols, list_prices) {
   #   merged_data: [list] (length of N) liste contenant les ratios pour chaque paires.
   
   # Store each ticker
-  ticker_A <- unlist(strsplit(unique_pairs, "/"))[1]  # Numerator
-  ticker_B <- unlist(strsplit(unique_pairs, "/"))[2]  # Denominator
+  ticker_A <- unlist(strsplit(unique_pair, "/"))[1]  # Numerator
+  ticker_B <- unlist(strsplit(unique_pair, "/"))[2]  # Denominator
   
   # Store the daily implied vol. of both stock in the pair
   vol_A <- list_vols[[ticker_A]] 

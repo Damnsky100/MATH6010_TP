@@ -1,12 +1,10 @@
-f_trading <- function(xts_obj, holding_period, df_clusters_yearly) {
+f_trading <- function(xts_obj, holding_period) {
   ### Cette fonction applique la stratégie de trading sur le training et testing set.
   ### Elle crée le backtest.
-  
   #  Inputs
   #   xts_obj: [xts_object] Objet qui contient un ratio de volatilités avec les indicateurs requis.
   #   holding_period: [scalar] Nombre de jours dans la trade. 
-  #   df_clusters_yearly: [data.frame] (N x C) Dataframe qui contient les clusters à chaque année.
-  
+
   #  OUTPUTS
   #   merged_data: [xts_object]  Objet qui contient les resultats de l'algorithme de trading.
   
@@ -38,8 +36,9 @@ f_trading <- function(xts_obj, holding_period, df_clusters_yearly) {
   
   ### Create empty columns for the PL construction
   current_price <- xts_obj[, 1]*0   # Current price of the underlying pair
-  PL_position <- xts_obj[, 1]*0        # Current return of current trade
+  PL_position <- xts_obj[, 1]*0     # Current return of current trade
   Value_position <- xts_obj[, 1]*0
+  closed_equity <- xts_obj[, 1]*0
   equity_curve <- xts_obj[, 1]*0
   
   # Start at index 2
@@ -173,8 +172,8 @@ f_trading <- function(xts_obj, holding_period, df_clusters_yearly) {
   
   ### PL and equity curve ###
   # Merge all columns into the output xts object, including the SD_flag
-  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, day_count, entry_price, exit_price, PL_position, Value_position, equity_curve)
-  colnames(xts_output)[8:16] <- c("SD_flag", "position", "trade_flag", "day_count", "entry_price", "exit_price", "PL_position", "Value_position", "equity_curve")
+  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, day_count, entry_price, exit_price, PL_position, Value_position, closed_equity, equity_curve)
+  colnames(xts_output)[8:17] <- c("SD_flag", "position", "trade_flag", "day_count", "entry_price", "exit_price", "PL_position", "Value_position", "closed_equity", "equity_curve")
   
 
   for (i in 2:nrow(xts_obj)) {
@@ -191,21 +190,22 @@ f_trading <- function(xts_obj, holding_period, df_clusters_yearly) {
   }
   
   ### Calculate the equity curve
-  # Start at 100$
+  # Start at 2$ per pair
   xts_output[1, "equity_curve"] <- 2
-  # Populate the column for the value of the open position
-  # Trade have a value of 2$
-  xts_output[, "Value_position"] <- 2*(xts_output[, "PL_position"])
+  xts_output[1, "closed_equity"] <- 2
   
   for (i in 2:nrow(xts_output)) {
+    # Populate the column for the value of the open position
+    xts_output[i, "Value_position"] <- 2 * as.numeric((xts_output[i, "PL_position"]))
     # No trades were closed, closed equity remains the same
     if (xts_output[i, "exit_price"] == 0) {
-      xts_output[i, "equity_curve"] <-  as.numeric(xts_output[i-1, "equity_curve"]) + xts_output[i, "Value_position"]
+      xts_output[i, "closed_equity"] <- xts_output[i-1, "closed_equity"]
       
     # Trades were closed, adjust the closed equity  
     } else if (xts_output[i, "exit_price"] != 0) {
-      xts_output[i, "equity_curve"] <-  as.numeric(xts_output[i-1, "equity_curve"]) + (as.numeric(xts_output[i-1, "Value_position"]))
+      xts_output[i, "closed_equity"] <-  as.numeric(xts_output[i-1, "closed_equity"]) + (as.numeric(xts_output[i-1, "Value_position"]))
     }
+    xts_output[i, "equity_curve"] <-  as.numeric(xts_output[i, "closed_equity"]) + xts_output[i, "Value_position"]
   }
   
   return(xts_output)

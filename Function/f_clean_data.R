@@ -67,13 +67,13 @@ f_get_vol_data <- function() {
   #          constituants du Dow Jones choisit.
   
   # Import data from rda
-  # data <- read.csv(here("Raw_Data", "data_vol_small.csv"))
-  data <- load(here("Raw_Data", "data_vol_big.rda"))
-  df_vol <- get(data)
-  # Retain specific columns
-  df_vol <- df_vol[, c("ticker", "date", "days", "delta", "impl_volatility")]
+  data <- read.csv(here("Raw_Data", "data_volatility.csv"))
   
-  return(df_vol)
+  # Retain specific columns
+  data_volatility_clean <- data[, c("ticker", "date", "days", "delta", "impl_volatility")]
+  
+  save(data_volatility_clean, file = here('Clean_Data', "data_volatility_clean.rda"))
+  return(data_volatility_clean)
 }
 
 
@@ -89,10 +89,9 @@ f_get_price_data <- function() {
   #   xts_price: [xts_object] (N x C) de prix journalier des constituants choisit
   
   # Import data from rda
-  data <- load(here("Raw_Data", "data_price_big.rda"))
-  df_price <- get(data)
-  # Retain specific columns
-  df_price <- df_price[, c("ticker", "date", "close")]
+  price_data <- load(here("Raw_Data", "stock_data.rda"))
+  df_price <- get(Price_data[1])
+  df_price <- df_price[, c("date", "ticker", "close")]
   
   return(df_price)
 } 
@@ -128,7 +127,7 @@ f_clean_vol_data <- function(df_vol, days_to_expiry, ticker) {
                       by=index(xts_vol), FUN=mean)
   xts_vol <- apply(xts_vol, 2, na.locf)                       # Fill the NAs with the previous value
   xts_vol <- as.xts(xts_vol)                                  # Save as xts
-  
+  index(xts_vol) <- as.Date(index(xts_vol))                   # Set index as date
   return(xts_vol)
 }
 
@@ -146,16 +145,15 @@ f_clean_price_data <- function(df_price, ticker) {
   #   xts_price: [xts_object] (N x C) de données journalière de prix des 
   #               constituants choisit.
   
+  # Remove the rownames
+  rownames(df_price) <- NULL
   # Retrieve the appropriate ticker
-  df_price <- df_price[df_price$ticker == ticker, ]
-  df_price <- df_price[, !colnames(df_price) %in% "ticker"]     # Drop ticker column
+  df_price <- df_price[df_price$ticker == ticker, ] # Retrieve only the current ticker
   df_price$date <- as.Date(df_price$date, 
-                           format = "%Y-%m-%d")                 # Set proper date format
-  # Save as xts_object
-  xts_price <- as.xts(df_price[, !names(df_price) %in% "date"], 
-                      order.by = df_price$date)                 # Order by date
-  xts_price <- apply(xts_price, 2, na.locf)                     # Fill the NAs with the previous value
-  xts_price <- as.xts(xts_price)
-  
+                           format = "%Y-%m-%d")     # Set proper date format
+  # Save as xts_object with closing price as the column and date as index
+  xts_price <- xts(x = df_price$close, 
+                   order.by = df_price$date)
+  index(xts_price) <- as.Date(index(xts_price))     # Set index as date
   return(xts_price)                                             
 }
