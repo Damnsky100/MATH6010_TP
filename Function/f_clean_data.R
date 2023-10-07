@@ -54,6 +54,8 @@ f_clean_NASDAQ100_constituents <- function() {
 }
 
 
+
+
 f_get_vol_data <- function() {
   
   ### Cette fonction retrouve les données de volatilités des constituants du Dow Jones choisit.
@@ -68,8 +70,6 @@ f_get_vol_data <- function() {
   
   # Import data from rda
   data <- read.csv(here("Raw_Data", "data_volatility.csv"))
-  
-  # Retain specific columns
   data_volatility_clean <- data[, c("ticker", "date", "days", "delta", "impl_volatility")]
   
   save(data_volatility_clean, file = here('Clean_Data', "data_volatility_clean.rda"))
@@ -90,7 +90,7 @@ f_get_price_data <- function() {
   
   # Import data from rda
   price_data <- load(here("Raw_Data", "stock_data.rda"))
-  df_price <- get(Price_data[1])
+  df_price <- get(price_data[1])
   df_price <- df_price[, c("date", "ticker", "close")]
   
   return(df_price)
@@ -118,16 +118,21 @@ f_clean_vol_data <- function(df_vol, days_to_expiry, ticker) {
   # Save as xts_object
   xts_vol <- xts(df_vol[, !names(df_vol) %in% "date"], 
                  order.by = df_vol$date)                    # Order by date
+  
   # Absolute values of deltas to combine put and call
-  xts_vol[, "delta"] <- abs(xts_vol[, "delta"]) 
+  xts_vol[, "delta"] <- abs(xts_vol[, "delta"])
+  
   # Keep only 30 days implied vol and 0.4 to 0.6 delta
   xts_vol <- xts_vol[xts_vol[, "days"] == days_to_expiry & (xts_vol[, "delta"] %in% c(40, 45, 50, 55, 60)), ]
-  # Take the average of the moneyness and save it
+  
+  # Take the average of the moneyness
   xts_vol <- aggregate(xts_vol[,"impl_volatility"], 
-                      by=index(xts_vol), FUN=mean)
-  xts_vol <- apply(xts_vol, 2, na.locf)                       # Fill the NAs with the previous value
-  xts_vol <- as.xts(xts_vol)                                  # Save as xts
-  index(xts_vol) <- as.Date(index(xts_vol))                   # Set index as date
+                       by=index(xts_vol), FUN=mean)
+  
+  xts_vol <- apply(xts_vol, 2, na.locf)                     # Fill NAs with the prev.
+  xts_vol <- as.xts(xts_vol)                                # Save as xts
+  index(xts_vol) <- as.Date(index(xts_vol))                 # Set index as date
+  
   return(xts_vol)
 }
 
@@ -147,13 +152,18 @@ f_clean_price_data <- function(df_price, ticker) {
   
   # Remove the rownames
   rownames(df_price) <- NULL
+  
   # Retrieve the appropriate ticker
-  df_price <- df_price[df_price$ticker == ticker, ] # Retrieve only the current ticker
+  df_price <- df_price[df_price$ticker == ticker, ]
+  
+  # Set proper date format
   df_price$date <- as.Date(df_price$date, 
-                           format = "%Y-%m-%d")     # Set proper date format
+                           format = "%Y-%m-%d")
+  
   # Save as xts_object with closing price as the column and date as index
   xts_price <- xts(x = df_price$close, 
                    order.by = df_price$date)
   index(xts_price) <- as.Date(index(xts_price))     # Set index as date
+  
   return(xts_price)                                             
 }

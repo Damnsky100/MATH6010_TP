@@ -19,16 +19,15 @@ f_compute_vol_ratios <- function(unique_pair, list_vols, list_prices) {
   # Store the daily implied vol. of both stock in the pair
   vol_A <- list_vols[[ticker_A]] 
   vol_B <- list_vols[[ticker_B]]
-  # Align the objects together
   aligned_vol <- merge.xts(vol_A, vol_B, fill= NA)
-  #Create ratio 
+  
+  # Create ratio 
   vol_ratio <- aligned_vol[, 1] / aligned_vol[, 2]
   colnames(vol_ratio) <- paste("vol_ratio")
   
   # Retrieve the prices from the list_price
   price_A <- list_prices[[ticker_A]]
   price_B <- list_prices[[ticker_B]]
-  # Align the objects together
   aligned_price <- merge.xts(price_A, price_B, fill= NA)
 
   #Create ratio 

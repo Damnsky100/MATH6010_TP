@@ -1,4 +1,4 @@
-f_trading <- function(xts_obj, holding_period) {
+f_trading <- function(xts_obj, holding_period, trade_size) {
   ### Cette fonction applique la stratégie de trading sur le training et testing set.
   ### Elle crée le backtest.
   #  Inputs
@@ -191,12 +191,12 @@ f_trading <- function(xts_obj, holding_period) {
   
   ### Calculate the equity curve
   # Start at 2$ per pair
-  xts_output[1, "equity_curve"] <- 2
-  xts_output[1, "closed_equity"] <- 2
+  xts_output[1, "equity_curve"] <- trade_size
+  xts_output[1, "closed_equity"] <- trade_size
   
   for (i in 2:nrow(xts_output)) {
     # Populate the column for the value of the open position
-    xts_output[i, "Value_position"] <- 2 * as.numeric((xts_output[i, "PL_position"]))
+    xts_output[i, "Value_position"] <- trade_size * as.numeric((xts_output[i, "PL_position"]))
     # No trades were closed, closed equity remains the same
     if (xts_output[i, "exit_price"] == 0) {
       xts_output[i, "closed_equity"] <- xts_output[i-1, "closed_equity"]
