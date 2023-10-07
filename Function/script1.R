@@ -4,6 +4,7 @@ library("zoo")
 library("quantmod")
 library("TTR")
 library("openxlsx")
+library("readxl")
 
 source(here("Function", "f_add_technicals.R"))
 source(here("Function", "f_compute_vol_ratios.R"))
@@ -23,10 +24,10 @@ df_clusters_yearly <- f_cluster(10)
 # data <- load(here("Raw_Data", "clusters.rda"))
 # df_clusters_yearly <- get(data[1])
 # df_clusters_yearly <- df_clusters_yearly[,1]    # Only use year 2007
-# stocks_symbols <- unique(df_clusters_yearly) # Store tickers
+stocks_symbols <- unique(df_clusters_yearly) # Store tickers
 
 # NO DELL, NO GOOG
-stocks_symbols <- c("AMAT", "DISH", "GILD", "MSFT", "QCOM", "QRTEA", "RYAAY", "VRTX")
+# stocks_symbols <- c("AMAT", "DISH", "GILD", "MSFT", "QCOM", "QRTEA", "RYAAY", "VRTX")
 
 #### Volatility and Price data #####
 
@@ -104,18 +105,21 @@ list_ratios_technicals <- lapply(list_ratios_technicals,
 
 # Create the backtest 
 list_trading <- lapply(list_ratios_technicals, 
-                       function(i) f_trading(i, 10))
+                       function(i) f_trading(i, 10, (100/45)))
 
 # Retrieve all the trades
 list_trades <- lapply(list_trading, 
                       function(i) f_extract_trades(i))
-
 # Merge
 df_all_trades <- do.call(rbind, list_trades)
 
+# Save Naive strategy results
+list_trading_naive <- list_trading
+write.xlsx(list_trading_naive, here("output", "list_trading_naive.xlsx"))
+save(list_trading_naive, file = here('Clean_Data', "list_trading_naive.rda"))
 # Save trades
 write.xlsx(df_all_trades, here("output", "trades_nasdaq.xlsx"))
-
+save(df_all_trades, file = here('Clean_Data', "df_all_trades_naive.rda"))
 
 ### Create equity curve ###
 
@@ -123,11 +127,6 @@ write.xlsx(df_all_trades, here("output", "trades_nasdaq.xlsx"))
 equity_curves <- lapply(list_trading, function(x) x$equity_curve)
 # Sum together to get porftolio value
 total_equity_curve <- Reduce("+", equity_curves)
-
-# Save
-write.xlsx(total_equity_curve, here("output", "Equity_curve.xlsx"))
-
-
 
 
 #### PLOTS #####
@@ -137,7 +136,7 @@ plot(index(total_equity_curve), coredata(total_equity_curve[,"equity_curve"]),
 
 
 # Convert list of xts objects to one multi-column zoo object
-multi_col_zoo <- do.call(merge, my_list)
+multi_col_zoo <- do.call(merge, equity_curves)
 
 # Generate 28 distinct colors
 colors <- rainbow(ncol(multi_col_zoo))
