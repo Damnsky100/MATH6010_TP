@@ -19,7 +19,7 @@ source(here("Function", "f_cluster.R"))
 
 
 # Define a FinancialAnalysis class
-LassoPrediction <- R6Class("LassoPrediction",
+ElasticNetPrediction <- R6Class("ElasticNetPrediction",
     public = list(
         df_price = NULL,
         tickers = NULL,
@@ -110,8 +110,6 @@ LassoPrediction <- R6Class("LassoPrediction",
                volatility(OHLC(x), calc = "garman")[, 1]
 
 
-        
-
             # Create a base name from ticker by removing any character that is not
             # a number or letter and then converting the results to lower case letters
             base_name <- tolower(gsub("[[:punct:]]", "", ticker))
@@ -169,7 +167,7 @@ LassoPrediction <- R6Class("LassoPrediction",
             df_ticker
         },
 
-        f_predictLasso = function(trainingset, testingset) {
+        f_elasticNet = function(trainingset, testingset) {
             
             # Formula
             fmla <- Y ~ . - date
@@ -251,41 +249,41 @@ LassoPrediction <- R6Class("LassoPrediction",
 
 init_instance = function(dataPrice, tickers) {
 
-        # Initialiser notre instance :  LassoPrediction class
-        lasso_pred <- LassoPrediction$new(dataPrice)
-        lasso_pred$tickers <- tickers
+        # Initialiser notre instance :  ElasticNetPrediction class
+        elasticNet_pred <- ElasticNetPrediction$new(dataPrice)
+        elasticNet_pred$tickers <- tickers
         # Generate Momentum features for each ticker
-        featuresList <- vector("list", length(lasso_pred$tickers))
-        names(featuresList) <- lasso_pred$tickers
+        featuresList <- vector("list", length(elasticNet_pred$tickers))
+        names(featuresList) <- elasticNet_pred$tickers
 
-        for (i in seq_along(lasso_pred$tickers)){
-            ticker <- lasso_pred$tickers[i]
-            tmp <- lasso_pred$f_constructFeatures(ticker, lasso_pred$df_price, lasso_pred$window_size)
+        for (i in seq_along(elasticNet_pred$tickers)){
+            ticker <- elasticNet_pred$tickers[i]
+            tmp <- elasticNet_pred$f_constructFeatures(ticker, elasticNet_pred$df_price, elasticNet_pred$window_size)
             featuresList[[i]] = tmp
             print(paste(ticker, " : Done"))
         }
         print("Features Building: Done")
-        lasso_pred$featuresList <- featuresList
+        elasticNet_pred$featuresList <- featuresList
         # Get the training and testing date ranges for Lasso regression
-        dates <- featuresList[[lasso_pred$tickers[1]]]$date 
-        trainRange <- lasso_pred$get_date_range("2007-12-31", "2018-01-01", lasso_pred$window_size, dates)
-        testRange <- lasso_pred$get_date_range("2017-12-31", "2023-01-01", 0, dates)
+        dates <- featuresList[[elasticNet_pred$tickers[1]]]$date 
+        trainRange <- elasticNet_pred$get_date_range("2007-12-31", "2018-01-01", elasticNet_pred$window_size, dates)
+        testRange <- elasticNet_pred$get_date_range("2017-12-31", "2023-01-01", 0, dates)
 
         n <- sum(dates %in% testRange$start:testRange$end)
-        predictionMatrix <- matrix(NA, nrow=n, ncol=length(lasso_pred$tickers))
-        colnames(predictionMatrix) <- lasso_pred$tickers
+        predictionMatrix <- matrix(NA, nrow=n, ncol=length(elasticNet_pred$tickers))
+        colnames(predictionMatrix) <- elasticNet_pred$tickers
 
-        resultsList <- vector("list", length(lasso_pred$tickers))
-        names(resultsList) <- lasso_pred$tickers
+        resultsList <- vector("list", length(elasticNet_pred$tickers))
+        names(resultsList) <- elasticNet_pred$tickers
 
-        for (tick in seq_along(lasso_pred$tickers)) {
+        for (tick in seq_along(elasticNet_pred$tickers)) {
             df <- featuresList[[tick]]
 
             # Subset the data based on the defined time ranges
             trainSet <- df[df$date %in% trainRange$start:trainRange$end, ]
             testSet <- df[df$date %in% testRange$start:testRange$end, ]
 
-            results <- lasso_pred$f_predictLasso(trainSet, testSet)
+            results <- elasticNet_pred$f_elasticNet(trainSet, testSet)
 
             # Store results in the main list
             resultsList[[tick]] <- list(
@@ -296,17 +294,17 @@ init_instance = function(dataPrice, tickers) {
             )
             predictionMatrix[, tick] <- results$predictions
 
-            print(paste(lasso_pred$tickers[tick], ", Finished, MSE:", resultsList[[tick]]$mse))
+            print(paste(elasticNet_pred$tickers[tick], ", Finished, MSE:", resultsList[[tick]]$mse))
         }
 
-        lasso_pred$resultsList <- resultsList
+        elasticNet_pred$resultsList <- resultsList
         print("Regression Building: Done")
         print(predictionMatrix)
-        lasso_pred$predictionMatrix <- predictionMatrix
+        elasticNet_pred$predictionMatrix <- predictionMatrix
 
-        lasso_pred$pricePrediction <- lasso_pred$get_price_prediction(testRange)
+        elasticNet_pred$pricePrediction <- elasticNet_pred$get_price_prediction(testRange)
 
-        return(lasso_pred)
+        return(elasticNet_pred)
 }
 
 
