@@ -1,4 +1,4 @@
-f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold) {
+f_trading_naive <- function(xts_obj, holding_period, trade_size, threshold) {
   ### Cette fonction applique la stratégie de trading sur le training et testing set.
   ### Elle crée le backtest.
   #  Inputs
@@ -55,8 +55,8 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
     if (!is.na(SD_flag[i-1])) {
       
       ### Ratio is below SD ###
-      #if (SD_flag[i-1] == -2 & accept_flag[i-1] == -1) {
       if (SD_flag[i-1] == -2) {
+        
         # No position, enter short
         if (position[i-1] == 0) {
           position[i] <- -1
@@ -88,8 +88,8 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
       }
       
       ### Ratio is above SD ###
-      #else if (SD_flag[i-1] == 2 & accept_flag[i-1] == 1) {
       else if (SD_flag[i-1] == 2) {
+        
         # No position, enter long
         if (position[i - 1] == 0) {
           position[i] <- 1
@@ -179,7 +179,7 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
     }
   }
   
-  message <- sprintf("%s/%s: done - test", Stock_A, Stock_B)
+  message <- sprintf("%s/%s: done - naive", Stock_A, Stock_B)
   print(message)
   
   ### PL and equity curve ###

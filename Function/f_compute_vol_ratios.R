@@ -1,6 +1,3 @@
-library("xts")
-library("here")
-
 f_compute_vol_ratios <- function(unique_pair, list_vols, list_prices) {
   ### Cette fonction crée les ratios de volatilités ainsi que les ratio de prix.
   
