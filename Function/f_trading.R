@@ -1,10 +1,12 @@
-f_trading <- function(xts_obj, holding_period, trade_size) {
+f_trading <- function(xts_obj, holding_period, trade_size, threshold) {
   ### Cette fonction applique la stratégie de trading sur le training et testing set.
   ### Elle crée le backtest.
   #  Inputs
   #   xts_obj: [xts_object] Objet qui contient un ratio de volatilités avec les indicateurs requis.
   #   holding_period: [scalar] Nombre de jours dans la trade. 
-
+  #   trade_size: [scalar] capital par trade
+  #   df_price_prediction: [Data.frame] Dataframe qui contient les predictions de ratios de prix dans 10 jours.
+  
   #  OUTPUTS
   #   merged_data: [xts_object]  Objet qui contient les resultats de l'algorithme de trading.
   
@@ -14,7 +16,7 @@ f_trading <- function(xts_obj, holding_period, trade_size) {
   # -1 = short
   # 11 = buy to close
   # -11 = sell to close
-  
+
   # Store the stock name of the current pair
   Stock_A <- sub("_Price", "", colnames(xts_obj)[2])
   Stock_B <- sub("_Price", "", colnames(xts_obj)[3])
@@ -24,6 +26,12 @@ f_trading <- function(xts_obj, holding_period, trade_size) {
   
   # Save the column price the time series its own object
   price_ratio <- xts_obj[,"price_ratio", ]
+  
+  # Retrieve price ratio prediction
+  ratio_price_predict <- xts_obj[,"price_prediction", ]
+  accept_flag <- xts_obj[, 1]*0
+  accept_flag <- ifelse(ratio_price_predict > (1+threshold) * price_ratio, 1,
+                              ifelse(ratio_price_predict < (1-threshold) * price_ratio, -1, 0))
   
   # Create empty columns needed for the trading algo
   position <- xts_obj[, 1]*0
@@ -47,8 +55,8 @@ f_trading <- function(xts_obj, holding_period, trade_size) {
     if (!is.na(SD_flag[i-1])) {
       
       ### Ratio is below SD ###
-      if (SD_flag[i-1] == -2) {
-        
+      if (SD_flag[i-1] == -2 & accept_flag[i-1] == -1) {
+      #if (SD_flag[i-1] == -2) {
         # No position, enter short
         if (position[i-1] == 0) {
           position[i] <- -1
@@ -80,8 +88,8 @@ f_trading <- function(xts_obj, holding_period, trade_size) {
       }
       
       ### Ratio is above SD ###
-      else if (SD_flag[i-1] == 2) {
-        
+      else if (SD_flag[i-1] == 2 & accept_flag[i-1] == 1) {
+      #else if (SD_flag[i-1] == 2) {
         # No position, enter long
         if (position[i - 1] == 0) {
           position[i] <- 1
@@ -112,7 +120,7 @@ f_trading <- function(xts_obj, holding_period, trade_size) {
       }
       
       ### Ratio is between SDs ###
-      else if (SD_flag[i-1] == 0) {
+      else {
         
         # No positon
         if (position[i-1] == 0) {
@@ -170,10 +178,14 @@ f_trading <- function(xts_obj, holding_period, trade_size) {
     }
   }
   
+  message <- sprintf("%s/%s: done", Stock_A, Stock_B)
+  print(message)
+  
   ### PL and equity curve ###
   # Merge all columns into the output xts object, including the SD_flag
-  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, day_count, entry_price, exit_price, PL_position, Value_position, closed_equity, equity_curve)
-  colnames(xts_output)[8:17] <- c("SD_flag", "position", "trade_flag", "day_count", "entry_price", "exit_price", "PL_position", "Value_position", "closed_equity", "equity_curve")
+  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, PL_position, Value_position, closed_equity, equity_curve)
+  colnames(xts_output)[9:19] <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "PL_position", "Value_position", "closed_equity", "equity_curve")
+  
   
 
   for (i in 2:nrow(xts_obj)) {
@@ -209,4 +221,6 @@ f_trading <- function(xts_obj, holding_period, trade_size) {
   }
   
   return(xts_output)
+  cat("Trading algorithmn completed\n")
+  
 }

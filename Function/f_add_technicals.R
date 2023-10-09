@@ -10,7 +10,6 @@ f_add_technicals <- function(xts_obj, rolling_window, SD) {
   #  OUTPUTS
   #   xts_obj: [xts_obj] (N x C) xts_object contenant un ratio de vol et indicateurs techniques
   
-  
   MA_100 <- SMA(xts_obj[, 1], n = rolling_window)   # Moving Average
   SD_100 <- runSD(xts_obj[, 1], n = rolling_window) # Rolling SD
   up_band <- MA_100 + SD * SD_100                   # SD above

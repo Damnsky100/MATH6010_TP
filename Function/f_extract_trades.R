@@ -49,12 +49,11 @@ f_extract_trades <- function(xts_object){
       
       # Append onto the trade list
       trades <- append(trades, list(current_trade))
-      
+
       # Empty the trade current_trade variable
       current_trade <- NULL
     }
   }
-  
   output <- do.call(rbind, lapply(trades, as.data.frame))
 }
 

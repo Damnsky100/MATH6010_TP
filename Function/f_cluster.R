@@ -39,4 +39,7 @@ f_cluster <- function(K) {
   
   portfolio <- as.vector(portfolio)
   portfolio$'TICKER SYMBOL'
+  
+  cat("Completed: f_cluster().R\n")
+  print(portfolio$'TICKER SYMBOL')
 }
