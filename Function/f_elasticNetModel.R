@@ -35,6 +35,17 @@ ElasticNetPrediction <- R6Class("ElasticNetPrediction",
         },
 
         get_date_range = function(start_date, end_date, offset = 0, dates) {
+            ### Cette fonction récupère une plage de dates entre une date de début et une date de fin, avec un décalage optionnel.
+
+            #  Inputs
+            #   start_date: [Date] la date de début pour la plage de dates.
+            #   end_date: [Date] la date de fin pour la plage de dates.
+            #   offset: [numeric] (par défaut = 0) un décalage à appliquer à la date de fin.
+            #   dates: [Date vector] un vecteur de dates parmi lesquelles la fonction recherche les indices de début et de fin.
+
+            #  OUTPUTS
+            #   Une liste contenant les dates de début et de fin correspondant à la plage de dates souhaitée.
+
             idxStart <- dates[which(dates > start_date)][1]
             idxEnd <- dates[which(dates < end_date)]
             idxEnd <- idxEnd[length(idxEnd) - offset]
@@ -42,6 +53,14 @@ ElasticNetPrediction <- R6Class("ElasticNetPrediction",
         },
         
         load_data = function(dataPrice) {
+            ### Cette fonction charge les données de prix, effectue des transformations et stocke les données dans un objet xts.
+
+            #  Inputs
+            #   dataPrice: [data.frame] un dataframe contenant les données de prix avec une colonne 'date'.
+
+            #  OUTPUTS
+            #   Aucun retour direct. Cependant, la fonction met à jour l'objet `self$df_price` avec les données transformées.
+
             # Read the CSV file
             self$df_price <- dataPrice
             
@@ -57,7 +76,15 @@ ElasticNetPrediction <- R6Class("ElasticNetPrediction",
         },
         
         rolling_window = function(data, window_size) {
-          
+            ### Cette fonction génère une matrice de fenêtres roulantes à partir des données fournies.
+
+            #  Inputs
+            #   data: [vector] un vecteur contenant les données pour lesquelles les fenêtres roulantes doivent être générées.
+            #   window_size: [integer] la taille de chaque fenêtre roulante.
+
+            #  OUTPUTS
+            #   result: [matrix] une matrice où chaque colonne représente une fenêtre roulante des données.
+
             # Number of windows
             n_windows <- length(data) - window_size + 1
             
@@ -73,17 +100,50 @@ ElasticNetPrediction <- R6Class("ElasticNetPrediction",
         },
         
         f_cumulativeReturnRolling = function(data, window_size){
+            ### Cette fonction calcule les rendements cumulés sur une fenêtre roulante pour les données fournies.
+
+            #  Inputs
+            #   data: [data.frame] un dataframe contenant une colonne 'return' qui représente les rendements.
+            #   window_size: [integer] la taille de chaque fenêtre roulante.
+
+            #  OUTPUTS
+            #   df: [data.frame] un dataframe contenant les rendements cumulés pour chaque fenêtre roulante. 
+            #       Les noms des lignes du dataframe correspondent aux dates de chaque fenêtre.
+
+
+            # Calculer le nombre de fenêtres roulantes possibles
             n_windows <- nrow(data) - window_size + 1
+            
+            # Utiliser la fonction rolling_window pour obtenir les fenêtres roulantes des rendements
             tmp <- self$rolling_window(as.numeric(data$return), window_size)
+            
+            # Calculer les rendements cumulés pour chaque fenêtre roulante
             cumulative_returns <- apply(tmp, 2, sum)
+            
+            # Extraire les dates des données
             dates <- index(data)
+            
+            # Créer un dataframe pour stocker les rendements cumulés
             df <- data.frame(cumulative_returns)
+            
+            # Attribuer les dates appropriées comme noms de lignes du dataframe
             rownames(df) <- dates[1:n_windows]
-            df
+            
+            return(df)
         },
         
         
         f_constructFeatures = function(ticker, df_price, window_size){
+            ### Cette fonction construit les caractéristiques techniques pour un ticker donné.
+
+            #  Inputs
+            #   ticker: [character] le nom du ticker pour lequel les caractéristiques doivent être construites.
+            #   df_price: [data.frame] un dataframe contenant les prix et autres informations financières.
+            #   window_size: [integer] la taille de la fenêtre pour le calcul des rendements cumulés.
+
+            #  OUTPUTS
+            #   df_ticker: [data.frame] un dataframe contenant les caractéristiques techniques pour le ticker donné.
+
             # A few technical indicators functions from TTR, see class notes 
             # for their definition
             f_ATR <- function(x)
@@ -168,6 +228,19 @@ ElasticNetPrediction <- R6Class("ElasticNetPrediction",
         },
 
         f_elasticNet = function(trainingset, testingset) {
+
+            ### Cette fonction entraîne un modèle de régression Elastic Net sur un ensemble d'entraînement et teste sa performance sur un ensemble de test.
+
+            #  Inputs
+            #   trainingset: [data.frame] un dataframe contenant les données d'entraînement.
+            #   testingset: [data.frame] un dataframe contenant les données de test.
+
+            #  OUTPUTS
+            #   Une liste contenant:
+            #   - model: [train object] le modèle Elastic Net entraîné.
+            #   - predictions: [numeric vector] les prédictions du modèle sur l'ensemble de test.
+            #   - coefficients: [data.frame] un dataframe contenant les coefficients non nuls du modèle.
+
             
             # Formula
             fmla <- Y ~ . - date
@@ -220,34 +293,51 @@ ElasticNetPrediction <- R6Class("ElasticNetPrediction",
         },
         
        get_price_prediction = function(testRange) {
-                # Retrieve the prices
-                df <- self$df_price[index(self$df_price) %in% testRange$start:testRange$end, c("ticker", "close", "date")]
-                df <- df[df$ticker %in% self$tickers]
-                df$close <- as.numeric(df$close)
+        ### Cette fonction récupère les prédictions de prix pour une plage de dates donnée.
 
-                # Create an xts object for each ticker using the date information from df
-                list_xts <- lapply(unique(df$ticker), function(ticker) {
-                    xts(df$close[df$ticker == ticker], order.by = as.Date(coredata(df$date[df$ticker == ticker])))
-                })
+            #  Inputs
+            #   testRange: [list] une liste contenant les dates de début et de fin pour lesquelles les prédictions de prix sont nécessaires.
 
-                # Combine the cleaned xts objects
-                combined_xts <- do.call(cbind, list_xts)
+            #  OUTPUTS
+            #   self$pricePrediction: [matrix] une matrice contenant les prédictions de prix pour chaque ticker dans la plage de dates spécifiée.
 
-                # Convert the combined xts object to a matrix
-                closePrice <- as.matrix(combined_xts)
-                # Convert all columns of the matrix to numeric
-                self$closePrice <- apply(closePrice, 2, as.numeric)
+            # Retrieve the prices
+            df <- self$df_price[index(self$df_price) %in% testRange$start:testRange$end, c("ticker", "close", "date")]
+            df <- df[df$ticker %in% self$tickers]
+            df$close <- as.numeric(df$close)
 
-                tmp <- exp(self$predictionMatrix) * self$closePrice
-                rownames(tmp) <- index(combined_xts)
-                self$pricePrediction <- tmp
-                self$pricePrediction
-            }
+            # Create an xts object for each ticker using the date information from df
+            list_xts <- lapply(unique(df$ticker), function(ticker) {
+                xts(df$close[df$ticker == ticker], order.by = as.Date(coredata(df$date[df$ticker == ticker])))
+            })
+
+            # Combine the cleaned xts objects
+            combined_xts <- do.call(cbind, list_xts)
+
+            # Convert the combined xts object to a matrix
+            closePrice <- as.matrix(combined_xts)
+            # Convert all columns of the matrix to numeric
+            self$closePrice <- apply(closePrice, 2, as.numeric)
+
+            tmp <- exp(self$predictionMatrix) * self$closePrice
+            rownames(tmp) <- index(combined_xts)
+            self$pricePrediction <- tmp
+            self$pricePrediction
+        }
         
     )
 )
 
 init_instance = function(dataPrice, tickers) {
+    ### Cette fonction initialise une instance de la classe ElasticNetPrediction et génère des prédictions de prix pour une liste de tickers.
+
+    #  Inputs
+    #   dataPrice: [data.frame] un dataframe contenant les données de prix pour chaque ticker.
+    #   tickers: [character vector] une liste des tickers pour lesquels les prédictions doivent être générées.
+
+    #  OUTPUTS
+    #   elasticNet_pred: [ElasticNetPrediction object] une instance de la classe ElasticNetPrediction contenant les prédictions de prix, les modèles, et d'autres informations pertinentes pour chaque ticker.
+
 
         # Initialiser notre instance :  ElasticNetPrediction class
         elasticNet_pred <- ElasticNetPrediction$new(dataPrice)
@@ -311,6 +401,14 @@ init_instance = function(dataPrice, tickers) {
 
 
 get_stock_data <- function(tickers) {
+    ### Cette fonction télécharge les données boursières pour une liste de tickers à partir de Yahoo Finance.
+
+    #  Inputs
+    #   tickers: [character vector] une liste des tickers pour lesquels les données doivent être téléchargées.
+
+    #  OUTPUTS
+    #   combined_data: [data.frame] un dataframe contenant les données boursières pour chaque ticker, y compris les prix ajustés et les log-rendements.
+
   # Initialize a list to store the data
   data_list <- list()
   
