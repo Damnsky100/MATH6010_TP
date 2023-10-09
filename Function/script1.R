@@ -20,14 +20,9 @@ source(here("Function", "f_extract_trades.R"))
 f_clean_data_clustering()
 df_clusters_yearly <- f_cluster(10)
 
-# Retrieve the clusters we used
-# data <- load(here("Raw_Data", "clusters.rda"))
-# df_clusters_yearly <- get(data[1])
-# df_clusters_yearly <- df_clusters_yearly[,1]    # Only use year 2007
-stocks_symbols <- unique(df_clusters_yearly) # Store tickers
+# Store tickers
+stocks_symbols <- unique(df_clusters_yearly) 
 
-# NO DELL, NO GOOG
-# stocks_symbols <- c("AMAT", "DISH", "GILD", "MSFT", "QCOM", "QRTEA", "RYAAY", "VRTX")
 
 #### Volatility and Price data #####
 
@@ -85,8 +80,40 @@ list_ratios <- lapply(list_volatility_ratios, function(x) {
 list_ratios_technicals <- lapply(list_ratios, 
                                  function(i) f_add_technicals(i, 100, 2))
 
+
+
+#### add predictions to the technicals ###
+
+df <- load(here("Clean_Data", "pricePrediction.rda"))
+df_price_prediction <- get(df[1])
+z <- unlist(all_pairs)
+df_price_ratio_predict <- f_compute_predict_price_ratios(z, df_price_prediction)
+
+
+# Iterate over the list and join the columns
+list_ratios_technicals <- lapply(names(list_ratios_technicals), function(x) {
+  # Check if the column exists in the dataframe
+  if(x %in% colnames(df_price_ratio_predict)) {
+    # Extract column from dataframe based on xts object's name
+    col_data <- df_price_ratio_predict[, x, drop=FALSE]
+    
+    # Convert the column to xts
+    price_prediction <- xts(col_data[, x], order.by=as.Date(rownames(col_data)))
+    
+    # Merge with the xts object
+    merged_xts <- merge(list_ratios_technicals[[x]], price_prediction)
+    
+    return(merged_xts)
+  } else {
+    return(list_ratios_technicals[[x]])  # Return original xts if no matching column
+  }
+})
+
+list_ratios_technicals <- lapply(list_ratios_technicals, na.locf)
+
 # Chose a starting date 
-start_date <- as.Date("2008-01-01")
+#start_date <- as.Date("2008-01-01")
+start_date <- as.Date("2018-01-01")
 end_date <- as.Date("2022-12-31")
 
 # Function to crop every list element for what we need
@@ -105,21 +132,22 @@ list_ratios_technicals <- lapply(list_ratios_technicals,
 
 # Create the backtest 
 list_trading <- lapply(list_ratios_technicals, 
-                       function(i) f_trading(i, 10, (100/45)))
+                       function(i) f_trading(i, 10, (100/45), 0.05))
 
 # Retrieve all the trades
 list_trades <- lapply(list_trading, 
                       function(i) f_extract_trades(i))
 # Merge
 df_all_trades <- do.call(rbind, list_trades)
+colnames(df_all_trades)[11] <- "profitable"
 
 # Save Naive strategy results
 list_trading_naive <- list_trading
-write.xlsx(list_trading_naive, here("output", "list_trading_naive.xlsx"))
-save(list_trading_naive, file = here('Clean_Data', "list_trading_naive.rda"))
+write.xlsx(list_trading_naive, here("output", "list_trading_outofsample_naive.xlsx"))
+save(list_trading_naive, file = here('Clean_Data', "list_trading_outofsample_naive.rda"))
 # Save trades
-write.xlsx(df_all_trades, here("output", "trades_nasdaq.xlsx"))
-save(df_all_trades, file = here('Clean_Data', "df_all_trades_naive.rda"))
+write.xlsx(df_all_trades, here("output", "df_all_trades_outofsample_naive.xlsx"))
+save(df_all_trades, file = here('Clean_Data', "df_all_trades_outofsample_naive.rda"))
 
 ### Create equity curve ###
 
@@ -127,6 +155,9 @@ save(df_all_trades, file = here('Clean_Data', "df_all_trades_naive.rda"))
 equity_curves <- lapply(list_trading, function(x) x$equity_curve)
 # Sum together to get porftolio value
 total_equity_curve <- Reduce("+", equity_curves)
+
+
+
 
 
 #### PLOTS #####
@@ -146,6 +177,26 @@ plot(multi_col_zoo, plot.type="single", col=colors, lwd=2, screen=1)
 
 
 
+naive_equity_curves <- equity_curves
+naive_total_equity_curve <- total_equity_curve
+
+reg_equity_curves 
+reg_total_equity_curve 
+
+my_xts <- merge(naive_total_equity_curve, reg_total_equity_curve)
+plot(index(my_xts), my_xts[, 1], type="l", col="blue", 
+     ylim=c(min(my_xts), max(my_xts)), 
+     xlab="Date", ylab="Value", main="Equity Curves")
+
+# Add the second column
+lines(index(my_xts), my_xts[, 2], col="red")
+
+# Add a horizontal line at the $100 mark
+abline(h=100, col="grey", lty=2, lwd=2)
+
+# Add a legend
+legend("topleft", legend=c('Naive strat.', 'with price prediction'), 
+       col=c("blue", "red"), lty=1, cex=0.8)
 
 ##### PLOTS #####
 
