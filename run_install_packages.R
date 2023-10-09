@@ -1,0 +1,1 @@
+install.packages(c("xts", "here", "zoo", "quantmod", "TTR", "openxlsx", "readxl", "writexl", "PerformanceAnalytics"))
