@@ -21,7 +21,7 @@ f_cluster <- function(K) {
   
   # Isoler seulement les données pour le clustering et scaler les colonnes
   df_fundamentals <- df_NASDAQ100_fundamentals_clean
-  colnames(df_fundamentals) <- gsub("\\.", " ", colnames(df_fundamentals))
+  
   cluster_data <- as.matrix(subset(df_fundamentals, select = -c(Code,Year_,Freq,`TICKER SYMBOL`,CUSIP,`COMPANY NAME`)))
   cluster_data_scaled <- scale(cluster_data)
   
@@ -31,11 +31,11 @@ f_cluster <- function(K) {
   df_fundamentals$CLUSTER <- km.out$cluster
   
   # Format des résultats
-  df_result <- df_fundamentals[,c("TICKER SYMBOL", "COMPANY NAME", "MARKET CAPITALIZATION (U S $)", "CLUSTER")]
-  df_result <- df_result[order(df_result$CLUSTER,-df_result$`MARKET CAPITALIZATION (U S $)`),]
+  df_result <- df_fundamentals[,c("TICKER SYMBOL", "COMPANY NAME", "MARKET CAPITALIZATION (U.S.$)", "CLUSTER")]
+  df_result <- df_result[order(df_result$CLUSTER,-df_result$`MARKET CAPITALIZATION (U.S.$)`),]
   df_result <- df_result[!duplicated(df_result$CLUSTER),]
   df_result <- df_result[order(df_result$`TICKER SYMBOL`), ]
-  portfolio <- df_result[, !(names(df_result) %in% c("MARKET CAPITALIZATION (U S $)", "CLUSTER"))]
+  portfolio <- df_result[, !(names(df_result) %in% c("MARKET CAPITALIZATION (U.S.$)", "CLUSTER"))]
   
   portfolio <- as.vector(portfolio)
   portfolio$'TICKER SYMBOL'
