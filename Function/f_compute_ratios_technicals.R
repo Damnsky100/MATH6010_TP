@@ -41,6 +41,7 @@ f_compute_ratios_technicals <- function(stocks_symbols, rolling_MA, rolling_SD) 
   
   
   #### Add regression part #### 
+  f_run_price_regressions(stocks_symbols)
   df <- load(here("Clean_Data", "pricePrediction.rda"))
   df_price_prediction <- get(df[1])
   unlist_all_pairs <- unlist(all_pairs)
