@@ -1,0 +1,137 @@
+---
+title: "MATH 60610"
+author: "Jonathan Andrew Guay, Sébastien Caron, William Delisle, Xavier Marcoux"
+date: "2023-10-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objective
+
+The objective is to improve a naive trading strategy with machine learning.
+
+
+# Initialization
+
+If required, run use run_install_packages.R to install the packages required for the project.
+
+```{r}
+library("xts")
+library("here")
+library("zoo")
+library("quantmod")
+library("TTR")
+library("openxlsx")
+library("readxl")
+library("writexl")
+library("PerformanceAnalytics")
+
+# Source the functions
+source(here("Function", "f_source_functions.R"))
+
+```
+# CLustering
+
+To begin, We use a clustering algorithm on the stocks of the NASDAQ100 in 2007.
+For the features, we used various accounting numbers and ratios.
+The raw data is from compustat database.
+
+```{r}
+# Retrieve and clean the data used for the clustering algorithm
+f_clean_data_clustering()
+
+# Run the clustering algorithm (K-mean, 10)
+stocks_symbols <- f_cluster(10)
+
+```
+# Collect and clean data
+
+Once the stocks are determined, we will retrieve raw data for the prices and the volatility.
+1) The price data is from quantmod (yahoo finance)
+2) The volatility data is from otpion metrics database.
+
+(Note: information to retrieve the raw data files from the vendors is under an appropriate README file in the raw data folder.)
+
+```{r}
+# Run all the data cleaning functions....
+  priceData <- get_stock_data(stocks_symbols)
+  
+  summary(priceData)
+  
+  # Save the 'data' object to an RData file
+  save(priceData, file = here("Clean_Data", "stock_data.rda"))
+  
+  # Vol data
+  # (mettre pour load ici au lieu de dans la fonction)
+```
+
+# Create the pairs
+
+At this step, we create all possible pairs and store their corresponding price and volatility data.
+We proceed to create the price ratios and the volatility ratios.  
+Furthermore, we compute the technical indicators used for the trading algorithm. 
+(100 day moving average and 2 standard deviation rolling window)
+
+
+
+```{r}
+list_ratios_technicals <- f_compute_ratios_technicals(stocks_symbols, 100, 2)
+
+```
+# Run naive strategy (in sample)
+Can skip this step if not required, rda file already saved.
+
+```{r}
+# Generate the out of sample data to train the classification
+f_run_strategy(start_date="2008-01-01", end_date="2017-12-31", list_ratios_technicals, strategy="naive")
+```
+
+# Regression
+
+En ce moment cest deja integrer dans la fonction list_ratios_technicals
+
+# Classification
+Run the classification algorithm on the trades retrieved from the naive strategy (in-sample).
+Integrate the required features to the database of indicators
+
+```{r}
+
+```
+
+
+# Run all strategies (out of sample)
+
+```{r}
+# Create the backtest for a strategy
+f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="naive")
+f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="regression")
+# f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="classification")
+# f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="both")
+```
+
+# Load the out-of-sample results
+Instead of running all the strategies, simply load the existing RDA files containing the results.
+
+```{r}
+
+equity_curves <- f_load_equity_curves()
+```
+
+
+# Results
+
+Show results
+
+```{r}
+# Display the results
+f_risk_metrics(equity_curves)
+```
+
+
+
+
+
+
