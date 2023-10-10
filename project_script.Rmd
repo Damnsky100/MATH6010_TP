@@ -19,20 +19,11 @@ The objective is to improve a naive trading strategy with machine learning.
 If required, run use run_install_packages.R to install the packages required for the project.
 
 ```{r}
-library("xts")
 library("here")
-library("zoo")
-library("quantmod")
-library("TTR")
-library("openxlsx")
-library("readxl")
-library("writexl")
-library("PerformanceAnalytics")
-library("ggplot2")
-library("tidyverse")
-
-# Source the functions
+# Source the functions and librairies
 source(here("Function", "f_source_functions.R"))
+
+f_source_functions()
 
 ```
 # CLustering
@@ -81,6 +72,7 @@ We proceed to create the price ratios and the volatility ratios.
 Furthermore, we compute the technical indicators used for the trading algorithm. 
 (100 day moving average and 2 standard deviation rolling window)
 
+Regressions are also estimated.
 
 
 ```{r}
