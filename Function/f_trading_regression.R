@@ -218,6 +218,6 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
   # Calculate the $ value of every open position
   xts_output[, "Value_position"] <- xts_output[, "equity_curve"] - xts_output[, "closed_equity"]
   
-  return(xts_output)
+  
   cat("Trading algorithmn completed\n")
 }
