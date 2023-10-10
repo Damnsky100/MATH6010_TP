@@ -28,6 +28,8 @@ library("openxlsx")
 library("readxl")
 library("writexl")
 library("PerformanceAnalytics")
+library("ggplot2")
+library("tidyverse")
 
 # Source the functions
 source(here("Function", "f_source_functions.R"))
@@ -37,7 +39,7 @@ source(here("Function", "f_source_functions.R"))
 
 To begin, We use a clustering algorithm on the stocks of the NASDAQ100 in 2007.
 For the features, we used various accounting numbers and ratios.
-The raw data is from compustat database.
+The raw data is from the compustat database.
 
 ```{r}
 # Retrieve and clean the data used for the clustering algorithm
@@ -56,7 +58,7 @@ Once the stocks are determined, we will retrieve raw data for the prices and the
 (Note: information to retrieve the raw data files from the vendors is under an appropriate README file in the raw data folder.)
 
 ```{r}
-# Run all the data cleaning functions....
+# Retrieve stock information from quantmod for each ticker.
   priceData <- get_stock_data(stocks_symbols)
   
   summary(priceData)
@@ -64,8 +66,12 @@ Once the stocks are determined, we will retrieve raw data for the prices and the
   # Save the 'data' object to an RData file
   save(priceData, file = here("Clean_Data", "stock_data.rda"))
   
-  # Vol data
-  # (mettre pour load ici au lieu de dans la fonction)
+  # Store the volatility data
+  df_vol <- f_get_vol_data()
+  
+  # Store price data
+  df_price <- f_get_price_data()  
+  
 ```
 
 # Create the pairs
@@ -78,7 +84,10 @@ Furthermore, we compute the technical indicators used for the trading algorithm.
 
 
 ```{r}
-list_ratios_technicals <- f_compute_ratios_technicals(stocks_symbols, 100, 2)
+list_ratios_technicals <- f_compute_ratios_technicals(stocks_symbols, 100, 2, df_vol, df_price)
+
+# Example
+print(tail(list_ratios_technicals[[1]]))
 
 ```
 # Run naive strategy (in sample)
@@ -118,6 +127,7 @@ Instead of running all the strategies, simply load the existing RDA files contai
 ```{r}
 
 equity_curves <- f_load_equity_curves()
+all_trades <- f_load_trades()
 ```
 
 
@@ -127,7 +137,10 @@ Show results
 
 ```{r}
 # Display the results
-f_risk_metrics(equity_curves)
+risk_metrics <- f_risk_metrics(equity_curves, all_trades)
+print(risk_metrics["Portfolio_statistics"])
+print(risk_metrics["Trades_statistics"])
+
 ```
 
 
