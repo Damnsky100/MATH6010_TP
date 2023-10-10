@@ -4,9 +4,6 @@ cat("Completed: f_add_technicals.R\n")
 source(here("Function", "f_compute_vol_ratios.R"))
 cat("Completed: f_compute_vol_ratios.R\n")
 
-source(here("Function", "f_trading.R"))
-cat("Completed: f_trading.R\n")
-
 source(here("Function", "f_trading_naive.R"))
 cat("Completed: f_trading_naive.R\n")
 
@@ -48,3 +45,6 @@ cat("Completed: f_compute_predict_price_ratios.R\n")
 
 source(here("Function", "f_load_equity_curves.R"))
 cat("Completed: f_load_equity_curves.R\n")
+
+source(here("Function", "f_load_trades.R"))
+cat("Completed: f_load_trades.R\n")

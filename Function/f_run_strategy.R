@@ -1,37 +1,40 @@
 f_run_strategy <- function(start_date, end_date, list_ratios_technicals, strategy) {
-  ###
-  ###
-  ###
+  ### Cette execute la strategie choisit pour une période déterminée et crée ensuite la courbe d'équité.
   
-  #
-  #
-  #
+  #  Inputs
+  #   start_date: [Date] la date de début de la période..
+  #   end_date: [Date] la date de fin de la période.
+  #   list_ratios_technicals: [List] Liste qui contient les informations techniques pour chaques paires.
+  #   strategy: [Character] La strategie choisit (Naive, Regression, Classification, Both)
   
-  # Chose a starting date 
-  #start_date <- as.Date("2008-01-01")
+  #  OUTPUTS
+  #   list_trading: [List] Une liste contenant le trading pour chaque paires.
+  #   df_all_trades: [Data.frame] Un data.frame avec tout les trades de la strategy (.rda et .xslx)
+  
+  # Starting Date
   start_date <- as.Date(start_date)
   end_date <- as.Date(end_date)
   
-  # Function to crop every list element for what we need
+  # Small function to crop data
   crop_data <- function(xts_obj, start_date, end_date) {
     tmp <- window(xts_obj, start = start_date, end = end_date)
     return(tmp)
   }
   
-  # Crop the volatilities for the dates we want
+  # Crop the vol data
   list_ratios_technicals <- lapply(list_ratios_technicals, 
                                    crop_data, 
                                    start_date, end_date)
   
   
-  # Select the appropriate strategy
-  # Naive
+  # Naive Strategy
   if (strategy == "naive") {
     # Create the backtest 
     list_trading <- lapply(list_ratios_technicals, 
                            function(i) f_trading_naive(i, 10, (100/45), 0.05))
   } 
-  # Regression
+  
+  # Regression Strategy
   if (strategy == "regression") {
     list_trading <- lapply(list_ratios_technicals, 
                            function(i) f_trading_regression(i, 10, (100/45), 0.05))
@@ -41,7 +44,8 @@ f_run_strategy <- function(start_date, end_date, list_ratios_technicals, strateg
   # Retrieve all the trades
   list_trades <- lapply(list_trading, 
                         function(i) f_extract_trades(i))
-  # Merge
+  
+  # Merge the trades from every pair
   df_all_trades <- do.call(rbind, list_trades)
   colnames(df_all_trades)[11] <- "profitable"
   
@@ -57,13 +61,16 @@ f_run_strategy <- function(start_date, end_date, list_ratios_technicals, strateg
   
   ### Create equity curve ###
   
-  # Retrieve equity curves for each pair
+  # Retrieve the equity curve from each pair in the list
   equity_curves <- lapply(list_trading, function(x) x$equity_curve)
-  # Sum together to get porftolio value
+  
+  # Sum the curves
   total_equity_curve <- Reduce("+", equity_curves)
+  
   # Convert xts to dataframe
   df_total_equity_curve <- as.data.frame(total_equity_curve)
-  # Add the date/time index as a new column
+  
+  # Add the date index as a new column
   df_total_equity_curve$Date <- index(total_equity_curve)
   
   # Save equity curve
@@ -75,4 +82,5 @@ f_run_strategy <- function(start_date, end_date, list_ratios_technicals, strateg
   write_xlsx(df_total_equity_curve, path = here('Output', name_file_xlsx))
   cat(paste("Equity_curve saved under:", name_file_xlsx, "\n"))
   
+  return(list_trading)
 }
