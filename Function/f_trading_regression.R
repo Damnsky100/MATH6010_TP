@@ -195,17 +195,20 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
   xts_output[1, "closed_equity"] <- trade_size
   
   for (i in 2:nrow(xts_output)) {
-    
-    # Open a position is opened, calculate equity curve
+    tmp <- as.numeric(xts_output[i ,"day_count"])
+    # A position is opened, calculate equity curve
     if (xts_output[i, "position"] == 1) {
-      xts_output[i, "equity_curve"] <- ((as.numeric(xts_output[i, 2]) / as.numeric(xts_output[i-1, 2])) -1) * trade_size - ((as.numeric(xts_output[i, 3]) / as.numeric(xts_output[i-1, 3])) -1) * trade_size + xts_output[i-1, "equity_curve"]
+      xts_output[i, "Value_position"] <- (as.numeric(xts_output[i, 2]) / as.numeric(xts_output[i-tmp, 2]) -1) * trade_size - (as.numeric(xts_output[i, 3] / as.numeric(xts_output[i-tmp, 3])) -1) * trade_size 
+      xts_output[i, "equity_curve"] <- as.numeric(xts_output[i-as.numeric(tmp), "equity_curve"]) + as.numeric(xts_output[i, "Value_position"])
     } else if (xts_output[i, "position"] == -1) {
-      xts_output[i, "equity_curve"] <- (-1*((as.numeric(xts_output[i, 2]) / as.numeric(xts_output[i-1, 2])) -1)) * trade_size + ((as.numeric(xts_output[i, 3]) / as.numeric(xts_output[i-1, 3])) -1) * trade_size + xts_output[i-1, "equity_curve"]
+      xts_output[i, "Value_position"] <- (-1*((as.numeric(xts_output[i, 2]) / as.numeric(xts_output[i-tmp, 2])) -1)) * trade_size + ((as.numeric(xts_output[i, 3]) / as.numeric(xts_output[i-tmp, 3])) -1) * trade_size
+      xts_output[i, "equity_curve"] <- as.numeric(xts_output[i-as.numeric(tmp), "equity_curve"]) + as.numeric(xts_output[i, "Value_position"])
     } else if ((xts_output[i, "position"] == 0)) {
+      xts_output[i, "Value_position"] <- 0
       xts_output[i, "equity_curve"] <- xts_output[i-1, "equity_curve"]
     }
   }
-
+  
   # Calculate the close equity
   for (i in 2:nrow(xts_output)) {
     if (trade_flag[i] == 11 || trade_flag[i] == -11) {
@@ -215,9 +218,6 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
     }
   }
   
-  # Calculate the $ value of every open position
-  xts_output[, "Value_position"] <- xts_output[, "equity_curve"] - xts_output[, "closed_equity"]
-  
-  
-  cat("Trading algorithmn completed\n")
+cat("Trading algorithmn completed\n")
+return(xts_output)
 }
