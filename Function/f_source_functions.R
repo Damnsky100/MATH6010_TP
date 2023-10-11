@@ -1,6 +1,7 @@
 f_source_functions <- function() {
   ### Cette fonction load toutes les librairies et fonctions utilisées.
   library("xts")
+  library("here")
   library("zoo")
   library("quantmod")
   library("TTR")
