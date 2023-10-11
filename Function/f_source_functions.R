@@ -16,11 +16,11 @@ f_source_functions <- function() {
   library("glmnet")
   library("Metrics")
   library("R6")
-  
+  library("randomForest")
   
   source(here("Function", "f_get_and_clean_data.R"))
   source(here("Function", "f_build_strategies.R"))
   source(here("Function", "f_trading.R"))
   source(here("Function", "f_generate_reports.R"))
-  
+  source(here("Function", "f_create_training_data_classification.R"))
 }
