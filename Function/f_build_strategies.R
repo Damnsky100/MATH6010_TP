@@ -504,7 +504,7 @@ ElasticNetPrediction <- R6Class("ElasticNetPrediction",
                                     #   - predictions: [numeric vector] les prédictions du modèle sur l'ensemble de test.
                                     #   - coefficients: [data.frame] un dataframe contenant les coefficients non nuls du modèle.
                                     
-                                    
+                                    set.seed(1234)
                                     # Formula
                                     fmla <- Y ~ . - date
                                     
