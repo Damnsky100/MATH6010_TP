@@ -24,3 +24,4 @@ f_train_classification <- function() {
   print(rf_default)
   return(rf_default)
 }
+
