@@ -86,10 +86,10 @@ print(tail(list_ratios_technicals[[1]]))
 Can skip this step if not required, rda file already saved.
 
 ```{r}
-# Generate the out of sample data to train the classification
+# Generate the in-sample data to train the classification
 f_run_strategy(start_date="2008-01-01", end_date="2017-12-31", list_ratios_technicals, strategy="naive")
-
-
+# Create classification features for the trades
+f_create_training_data_classification(start_date="2008-01-01", end_date="2017-12-31")
 ```
 
 # Regression
@@ -101,8 +101,6 @@ Run the classification algorithm on the trades retrieved from the naive strategy
 Integrate the required features to the database of indicators
 
 ```{r}
-f_create_training_data_classification()
-
 classification_model <- f_train_classification()
 
 ```

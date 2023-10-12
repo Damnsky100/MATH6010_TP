@@ -1,4 +1,4 @@
-f_train_classification <- function() {
+f_train_classification <- function(start_date, end_date) {
   
   load(here("Clean_Data", "trade_classification_is.rda"))
   dataset <- trade_classification
@@ -10,7 +10,7 @@ f_train_classification <- function() {
                           number=10,
                           repeats=3)
   #Metric compare model is Accuracy
-  set.seed(123)
+  set.seed(1234)
   #Number randomly variable selected is mtry
   mtry <- sqrt(ncol(x))
   tunegrid <- expand.grid(.mtry=mtry)
@@ -24,4 +24,3 @@ f_train_classification <- function() {
   print(rf_default)
   return(rf_default)
 }
-

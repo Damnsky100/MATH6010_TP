@@ -52,13 +52,13 @@ load(here("Clean_Data", "stock_data.rda"))
 result <- init_instance(priceData, tickers)
 
 # Retreive the best elastic net model for each tickers (Just switch GE for the another ticker)
-result$resultsList$GE$model
+result$resultsList$AMAT$model
 
 #Retreive the coefficients of the models for each tickers (Just switch GE for the another ticker)
-result$resultsList$GE$coefficients
+result$resultsList$AMAT$coefficients
 
 #Retreive the MSE (Out of sample - Testing set) for every model (Just switch GE for the another ticker)
-result$resultsList$GE$mse
+result$resultsList$AMAT$mse
 
 # Retreive the price predicion in 10 days for the tickers 
 dates <- result$featuresList[[result$tickers[1]]]$date 
