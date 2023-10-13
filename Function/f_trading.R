@@ -259,8 +259,7 @@ f_trading_naive <- function(xts_obj, holding_period, trade_size) {
     }
   }
   
-  message <- sprintf("%s/%s: done - naive", Stock_A, Stock_B)
-  print(message)
+
   
   ### PL and equity curve ###
   
@@ -485,8 +484,6 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
     }
   }
   
-  message <- sprintf("%s/%s: done - regression", Stock_A, Stock_B)
-  print(message)
   
   # Merge all columns into the output xts object, including the SD_flag
   ncol_original <- ncol(xts_obj)
@@ -707,9 +704,7 @@ f_trading_classification <- function(xts_obj, holding_period, trade_size) {
         entry_price[i] <- 0
     }
   }
-  
-  message <- sprintf("%s/%s: done - class", Stock_A, Stock_B)
-  print(message)
+
   
   # Merge all columns into the output xts object, including the SD_flag
   ncol_original <- ncol(xts_obj)
@@ -936,9 +931,7 @@ f_trading_both <- function(xts_obj, holding_period, trade_size, threshold) {
     }
   }
   
-  message <- sprintf("%s/%s: done - both", Stock_A, Stock_B)
-  print(message)
-  
+
   # Merge all columns into the output xts object, including the SD_flag
   ncol_original <- ncol(xts_obj)
   xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, Value_position, closed_equity, equity_curve)
