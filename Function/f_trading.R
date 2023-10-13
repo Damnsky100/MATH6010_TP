@@ -85,7 +85,7 @@ f_run_strategy <- function(start_date, end_date, list_ratios_technicals, strateg
   
 }
 
-f_trading_naive <- function(xts_obj, holding_period, trade_size, threshold) {
+f_trading_naive <- function(xts_obj, holding_period, trade_size) {
   ### Cette fonction applique la stratégie de trading sur le training et testing set.
   ### Elle crée le backtest.
   
@@ -271,9 +271,11 @@ f_trading_naive <- function(xts_obj, holding_period, trade_size, threshold) {
   ### PL and equity curve ###
   
   # Merge all columns into the output xts object, including the SD_flag
-  ncol <- ncol(xts_obj)
+  ncol_original <- ncol(xts_obj)
   xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, Value_position, closed_equity, equity_curve)
-  colnames(xts_output)[11:20] <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "Value_position", "closed_equity", "equity_curve")
+  
+  new_colnames <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "Value_position", "closed_equity", "equity_curve")
+  colnames(xts_output)[(ncol_original+1):(ncol_original+length(new_colnames))] <- new_colnames
   
   ## Calculate the equity curve
   # Start at the trade_size amount
@@ -492,10 +494,13 @@ f_trading_regression <- function(xts_obj, holding_period, trade_size, threshold)
   message <- sprintf("%s/%s: done - regression", Stock_A, Stock_B)
   print(message)
   
-  ### PL and equity curve ###
   # Merge all columns into the output xts object, including the SD_flag
-  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, PL_position, Value_position, closed_equity, equity_curve)
-  colnames(xts_output)[11:21] <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "PL_position", "Value_position", "closed_equity", "equity_curve")
+  ncol_original <- ncol(xts_obj)
+  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, Value_position, closed_equity, equity_curve)
+  
+  new_colnames <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "Value_position", "closed_equity", "equity_curve")
+  colnames(xts_output)[(ncol_original+1):(ncol_original+length(new_colnames))] <- new_colnames
+  
   
   ## Calculate the equity curve
   # Start at the trade_size amount
@@ -712,10 +717,13 @@ f_trading_classification <- function(xts_obj, holding_period, trade_size) {
   message <- sprintf("%s/%s: done - class", Stock_A, Stock_B)
   print(message)
   
-  ### PL and equity curve ###
   # Merge all columns into the output xts object, including the SD_flag
-  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, PL_position, Value_position, closed_equity, equity_curve)
-  colnames(xts_output)[11:21] <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "PL_position", "Value_position", "closed_equity", "equity_curve")
+  ncol_original <- ncol(xts_obj)
+  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, Value_position, closed_equity, equity_curve)
+  
+  new_colnames <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "Value_position", "closed_equity", "equity_curve")
+  colnames(xts_output)[(ncol_original+1):(ncol_original+length(new_colnames))] <- new_colnames
+  
   
   ## Calculate the equity curve
   # Start at the trade_size amount
@@ -937,10 +945,13 @@ f_trading_both <- function(xts_obj, holding_period, trade_size, threshold) {
   message <- sprintf("%s/%s: done - both", Stock_A, Stock_B)
   print(message)
   
-  ### PL and equity curve ###
   # Merge all columns into the output xts object, including the SD_flag
-  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, PL_position, Value_position, closed_equity, equity_curve)
-  colnames(xts_output)[11:21] <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "PL_position", "Value_position", "closed_equity", "equity_curve")
+  ncol_original <- ncol(xts_obj)
+  xts_output <- merge(xts_obj, SD_flag, position, trade_flag, accept_flag, day_count, entry_price, exit_price, Value_position, closed_equity, equity_curve)
+  
+  new_colnames <- c("SD_flag", "position", "trade_flag", "accept_flag", "day_count", "entry_price", "exit_price", "Value_position", "closed_equity", "equity_curve")
+  colnames(xts_output)[(ncol_original+1):(ncol_original+length(new_colnames))] <- new_colnames
+  
   
   ## Calculate the equity curve
   # Start at the trade_size amount

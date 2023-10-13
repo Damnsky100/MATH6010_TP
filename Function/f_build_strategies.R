@@ -125,13 +125,30 @@ f_compute_ratios_technicals <- function(stocks_symbols, rolling_MA, rolling_SD, 
   list_ratios_technicals <- lapply(list_ratios, 
                                    function(i) f_add_technicals(i, 100, 2))
   
-  # Add the price prediction from the regression
-  f_run_price_regressions(stocks_symbols)
+  # Rename
+  names(list_ratios_technicals) <- unlist(all_pairs)
+  
+  return(list_ratios_technicals)
+}
+  
+f_add_regression_predictions <- function(list_ratios_technicals) {
+  ### Cette fonction joint les predictions de prix au data set avec les ratios techniques
+  ### qui sont utilisés par les fonctions de trading.
+  
+  # Inputs:
+  #   list_ratios_technicals: [List] La liste qui contient les ratios technique pour chaque stocks
+  
+  # Outputs
+  #   list_ratios_technicals : [List] La liste de ratios technique avec les prix prédit.
+  
+  # store the names of the elements
+  store_names <- names(list_ratios_technicals)
   
   # Load the predictions
   df <- load(here("Clean_Data", "pricePrediction.rda"))
   df_price_prediction <- get(df[1])
-  unlist_all_pairs <- unlist(all_pairs)
+  
+  unlist_all_pairs <- names(list_ratios_technicals)
   
   # Compute all the future price ratios
   df_price_ratio_predict <- f_compute_predict_price_ratios(unlist_all_pairs, df_price_prediction)
@@ -140,7 +157,6 @@ f_compute_ratios_technicals <- function(stocks_symbols, rolling_MA, rolling_SD, 
   list_ratios_technicals <- lapply(names(list_ratios_technicals), function(x) {
     
     # Check if the column exists in the dataframe
-    
     if(x %in% colnames(df_price_ratio_predict)) {
       
       # Extract column from dataframe based on xts object's name
@@ -160,8 +176,7 @@ f_compute_ratios_technicals <- function(stocks_symbols, rolling_MA, rolling_SD, 
   
   list_ratios_technicals <- lapply(list_ratios_technicals, na.locf)
   
-  # Name the list
-  names(list_ratios_technicals) <- unlist_all_pairs
+  names(list_ratios_technicals) <- store_names
   
   # Save ratio technicals
   name_file <- paste0("list_ratios_technicals_all.rda")
@@ -203,7 +218,7 @@ f_generate_pairs <- function(stocks_symbols) {
 
 f_compute_vol_ratios <- function(unique_pair, list_vols, list_prices) {
   ### Cette fonction crée les ratios de volatilités ainsi que les ratio de prix
-  ###  qui sont requis pour la strategie de trading.  
+  ### qui sont requis pour la strategie de trading.  
   
   #  Inputs
   #   stock_pairs: [character] (2 x 1) le nom de la paire.
