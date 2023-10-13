@@ -1,139 +1,84 @@
 ---
 title: "MATH 60610"
 author: "Jonathan Andrew Guay, Sébastien Caron, William Delisle, Xavier Marcoux"
-date: "2023-10-08"
+date: "2023-10-13"
 output: html_document
 ---
 
+### **MÉTHODES D'APPRENTISSAGE APPLIQUÉES AUX DONNÉES FINANCIÈRES** 
+## TP A 
+
+L'objectif de ce projet est d'utiliser certaines méthodes d'apprentrissage 
+afin d'améliorer la performance d'une stratégie de trading de base.
+
+##  
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-# Objective
-
-The objective is to improve a naive trading strategy with machine learning.
-
-
-# Initialization
-
-If required, run use run_install_packages.R to install the packages required for the project.
-
-```{r}
 library("here")
 # Source the functions and librairies
 source(here("Function", "f_source_functions.R"))
 
 f_source_functions()
-
 ```
-# CLustering
 
-To begin, We use a clustering algorithm on the stocks of the NASDAQ100 in 2007.
-For the features, we used various accounting numbers and ratios.
-The raw data is from the compustat database.
+## Importation des données (Run_data)
+
+Pour débuter, nous appliquons un algorithm de clustering sur les titres qui du NASDAQ 100. Le résultat, affiché ci-bas, determinera notre univers de titres pour la stratégie de trading.  Par la suite, nous importons plusieurs sources de données externes.
+
+* Importer les donées financières des compagnies dans le NASDAQ 100 pour l'année 2007.
+* Executer l'algorithm de clustering pour selectrionner les titres de la stratégie.
+* Importer et nettoyer les données de prix des titres choisit.
+* Importer et nettoyer les données de volatilité des titres choisit.
+* Importer et nettoyer les données de classification des titres choisit.
 
 ```{r}
-# Retrieve and clean the data used for the clustering algorithm
-f_clean_data_clustering()
-
-# Run the clustering algorithm (K-mean, 10)
-stocks_symbols <- f_cluster(10)
-
+source(here("run_data.R"))
 ```
-# Collect and clean data
+## Stratégie de trading (Run_strategy)
 
-Once the stocks are determined, we will retrieve raw data for the prices and the volatility.
-1) The price data is from quantmod (yahoo finance)
-2) The volatility data is from otpion metrics database.
+Une fois les titres choisit et les données importées, nous allons completer plusieurs étapes afin d'éxecuter la stratégie de trading.
 
-(Note: information to retrieve the raw data files from the vendors is under an appropriate README file in the raw data folder.)
+1. Signaux techniques
+  * Determiner toutes les combinaison de paires possibles.
+  * Création des ratios de volatilités ainsi que les indicateurs requis (*Moving Average* et *Standard Deviation*)
 
-```{r}
-# Retrieve stock information from quantmod for each ticker.
-  priceData <- get_stock_data(stocks_symbols)
+2. Stratégie de trading (*In-sample*)
+  * Executer la strategie de trading sur les données 01/01/2008 à 31/12/2017. 
+  * Sauvegarder les transactions executées.
+
+3. Regression
+  * Calculer plusieurs indicateurs techniques utilisé comme prédicteurs.
+  * Estimer les modèles pour chaque titres avec la regression *Elastic Net*.
+  * Predire les rendements dans 10 jours, pour chaque pas de temps *Out-of-sample*.
+
+4. Classification
+  * Recupérer les transactions de trading *In-sample*
+  * Estimer le modèle de classification par *Random Forest*
   
-  summary(priceData)
-  
-  # Save the 'data' object to an RData file
-  save(priceData, file = here("Clean_Data", "stock_data.rda"))
-  
-  # Store the volatility data
-  df_vol <- f_get_vol_data()
-  
-  # Store price data
-  df_price <- f_get_price_data()  
-  
-```
-
-# Create the pairs
-
-At this step, we create all possible pairs and store their corresponding price and volatility data.
-We proceed to create the price ratios and the volatility ratios.  
-Furthermore, we compute the technical indicators used for the trading algorithm. 
-(100 day moving average and 2 standard deviation rolling window)
-
-Regressions are also estimated.
+5. Stratégie de trading (*Out-of-sample*)
+  * Joinde les prédictions des deux modèles pour chaque pas de temps *Out-of-sample*.
+  * Executer les stratégies de trading.
+    * Naive
+    * Regression
+    * Classification
+    * Combinées
+  * Sauvegarder les transactions et les résultats.
 
 
 ```{r}
-list_ratios_technicals <- f_compute_ratios_technicals(stocks_symbols, 100, 2, df_vol, df_price)
-
-# Example
-print(tail(list_ratios_technicals[[1]]))
-
+source(here("run_strategy.R"))
 ```
-# Run naive strategy (in sample)
-Can skip this step if not required, rda file already saved.
+
+## Rapport (Run_outputs)
+
+Pour conclure, nous allons regrouper certaines informations pertinentes tel que des mesures de risques ainsi que des informations concernant les transactions.
 
 ```{r}
-# Generate the out of sample data to train the classification
-f_run_strategy(start_date="2008-01-01", end_date="2017-12-31", list_ratios_technicals, strategy="naive")
-```
-
-# Regression
-
-En ce moment cest deja integrer dans la fonction list_ratios_technicals
-
-# Classification
-Run the classification algorithm on the trades retrieved from the naive strategy (in-sample).
-Integrate the required features to the database of indicators
-
-```{r}
+source(here("run_outputs.R"))
 
 ```
 
-
-# Run all strategies (out of sample)
-
-```{r}
-# Create the backtest for a strategy
-f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="naive")
-f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="regression")
-# f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="classification")
-# f_run_strategy(start_date="2018-01-01", end_date="2022-12-31", list_ratios_technicals, strategy="both")
-```
-
-# Load the out-of-sample results
-Instead of running all the strategies, simply load the existing RDA files containing the results.
-
-```{r}
-
-equity_curves <- f_load_equity_curves()
-all_trades <- f_load_trades()
-```
-
-
-# Results
-
-Show results
-
-```{r}
-# Display the results
-risk_metrics <- f_risk_metrics(equity_curves, all_trades)
-print(risk_metrics["Portfolio_statistics"])
-print(risk_metrics["Trades_statistics"])
-
-```
 
 
 
