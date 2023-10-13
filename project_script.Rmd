@@ -16,9 +16,9 @@ afin d'améliorer la performance d'une stratégie de trading de base.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library("here")
+
 # Source the functions and librairies
 source(here("Function", "f_source_functions.R"))
-
 f_source_functions()
 ```
 
@@ -76,7 +76,6 @@ Pour conclure, nous allons regrouper certaines informations pertinentes tel que 
 
 ```{r}
 source(here("run_outputs.R"))
-
 ```
 
 
