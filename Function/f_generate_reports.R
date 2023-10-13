@@ -5,20 +5,28 @@ f_load_trades <- function() {
   #  OUTPUTS
   #   output: [liste] Une liste ou chaque element est tout les trades de chaque stratégie.
   
-  # Empty list
+  # Create empty list
   all_trades_list <- list()
-  
+   
   # Naive Strat
   loaded_name <- load(here("output", "df_all_trades_naive_2018-01-01_to_2022-12-31.rda"))
-  naive_trades <- get(loaded_name)
-  cat("Loaded: naive_trades\n")
-  all_trades_list$naive_trades <- naive_trades
+  Naive_trades <- get(loaded_name)
+  all_trades_list$Naive_trades <- Naive_trades
   
   # Regression Strat
   loaded_name <- load(here("output", "df_all_trades_regression_2018-01-01_to_2022-12-31.rda"))
-  regression_trades <- get(loaded_name)
-  cat("Loaded: regression_trades\n")
-  all_trades_list$regression_trades <- regression_trades
+  Regression_trades <- get(loaded_name)
+  all_trades_list$Regression_trades <- Regression_trades
+  
+  # Classification Strat
+  loaded_name <- load(here("output", "df_all_trades_classification_2018-01-01_to_2022-12-31.rda"))
+  Classification_trades <- get(loaded_name)
+  all_trades_list$Classification_trades <- Classification_trades
+  
+  # Both Strat
+  Ensemble_trades <- load(here("output", "df_all_trades_both_2018-01-01_to_2022-12-31.rda"))
+  Both_trades <- get(loaded_name)
+  all_trades_list$Both_trades <- Both_trades
   
   return(all_trades_list)
 }
@@ -33,22 +41,29 @@ f_load_equity_curves <- function() {
   # Naive Strat
   loaded_name <- load(here("output", "Equity_curve_naive_2018-01-01_to_2022-12-31.rda"))
   naive_strat <- get(loaded_name)
-  cat("Loaded: naive_strat\n")
   
   # Regression Strat
   loaded_name <- load(here("output", "Equity_curve_regression_2018-01-01_to_2022-12-31.rda"))
   regression_strat <- get(loaded_name)
-  cat("Loaded: regression_strat\n")
+  
+  # Classification Strat
+  loaded_name <- load(here("output", "Equity_curve_classification_2018-01-01_to_2022-12-31.rda"))
+  classification_strat <- get(loaded_name)
+  
+  # Both Strat
+  loaded_name <- load(here("output", "Equity_curve_both_2018-01-01_to_2022-12-31.rda"))
+  both_strat <- get(loaded_name)
+
   
   # Combine them together
-  all_curves <- merge(naive_strat, regression_strat, by = "Date", all = TRUE)
-  names(all_curves) <- c("Date", "Naive", "Regression")
-  
+  all_curves <- cbind(naive_strat, regression_strat[1], classification_strat[1], both_strat[1])
+  names(all_curves) <- c("Naive", "Date" , "Régression", "Classification", "Ensemble")
+  all_curves <- all_curves[, c(2, 1, 3, 4, 5)]
   return(all_curves)
 }
 
 f_risk_metrics <- function(equity_curves, all_trades) {
-  ### Cette fonction calcul les mesures de risques et retrouvent des informations pertinentes.
+  ### Cette fonction calcule les mesures de risques et retrouvent des informations pertinentes.
   
   # Inputs
   #   equity_curves: [Data.frame] Dataframe contenant toutes les courbes d'équités.
@@ -60,15 +75,17 @@ f_risk_metrics <- function(equity_curves, all_trades) {
   # Create xts object
   all_curves_xts <- xts(equity_curves[, -which(names(equity_curves) == "Date")], order.by=equity_curves$Date)
   
-  # Compute log returns
+  # Compute log rets
   all_returns_xts <- diff(log(all_curves_xts))
   all_returns_xts <- all_returns_xts[-1, ]
   
-  # Extract the series for naive and regression
-  naive <- all_returns_xts[, 1]
-  regression <- all_returns_xts[, 2]
+  # Extract the series
+  Naive <- all_returns_xts[, 1]
+  Regression <- all_returns_xts[, 2]
+  Classification <- all_returns_xts[, 3]
+  Ensemble <- all_returns_xts[, 4]
   
-  # Function to calculate metrics
+  # Function to calculate risk metrics
   calculate_metrics <- function(returns) {
     
     total_ret <- round(Return.cumulative(returns) * 100, 2)
@@ -104,11 +121,15 @@ f_risk_metrics <- function(equity_curves, all_trades) {
     return(metrics)
   }
   
-  naive_metrics <- calculate_metrics(naive)
-  regression_metrics <- calculate_metrics(regression)
+  # Calculate the metrics for each strategy
+  naive_metrics <- calculate_metrics(Naive)
+  regression_metrics <- calculate_metrics(Regression)
+  classification_metrics <- calculate_metrics(Classification)
+  both_metrics <- calculate_metrics(Ensemble)
   
-  Portfolio_statistics <- cbind(naive_metrics, regression_metrics)
-  colnames(Portfolio_statistics) <- c("Naive", "Regression")
+  # Group the information
+  Portfolio_statistics <- cbind(naive_metrics, regression_metrics, classification_metrics, both_metrics)
+  colnames(Portfolio_statistics) <- c("Naive", "Regression", "Classification", "Both")
   
   
   calculate_statistics <- function(df) {
@@ -121,11 +142,11 @@ f_risk_metrics <- function(equity_curves, all_trades) {
     max_loss_position <- round(min(df$Value_position), 4)  
     
     statistics <- data.frame(
-      Trades = n_rows,
-      Profitable_trades_percentage = percent_profitable,
-      Avg_ret_position = avg_ret_position,  
-      Max_profit_position = max_proft_position,
-      Max_loss_position = max_loss_position
+      Transactions = n_rows,
+      Transactions_profitables_perc = percent_profitable,
+      Gain_moyen = avg_ret_position,  
+      Max_profit = max_proft_position,
+      Max_perte = max_loss_position
     )
     return(statistics)
   }
@@ -145,3 +166,49 @@ f_risk_metrics <- function(equity_curves, all_trades) {
   cat(paste("Risk_metrics.rda saved under:", name_file, "\n"))
   
 }
+
+
+f_call_plots <- function(equity_curves){
+  ### All curves together
+  # Melt the data
+  df <- pivot_longer(equity_curves, -Date, names_to = "Method", values_to = "Value")
+  
+  # Plot
+  p <- ggplot(df, aes(x = Date, y = Value, color = Method)) +
+    geom_line() +
+    theme_minimal() +
+    labs(title = "Stratégies de trading", x = "Date", y = "Valeur du portefeuille") +
+    scale_color_discrete(name = "Stratégie:") +
+    theme(axis.text = element_text(face = "bold"),
+          axis.title = element_text(face = "bold"),
+          plot.title = element_text(hjust = 0.5),
+          legend.position = "top")
+  
+  # Display the plot
+  print(p)
+  
+  ### Only Naive
+  # Data to xts
+  equity_curve_xts <- xts(equity_curves[,2], order.by = as.Date(equity_curves$Date))
+  
+  # Daily log rets
+  daily_returns <- Return.calculate(equity_curve_xts, method = "log")
+  
+  # Drawdown
+  drawdown <- Drawdowns(daily_returns)
+  
+  par(mfrow = c(3, 1))
+  # Equity Curve
+  a <- plot(index(equity_curve_xts), equity_curve_xts, type = "l", col = "blue", ylab = "Equity Curve", xlab = "Date")
+  # Daily Returns
+  b <- plot(index(daily_returns), daily_returns, type = "h", col = "darkgreen", ylab = "Daily Returns", xlab = "Date")
+  # Drawdown
+  c <- plot(index(drawdown), drawdown, type = "h", col = "red", ylab = "Drawdown", xlab = "Date")
+  print(a)
+  print(b)
+  print(c)
+  par(mfrow = c(1, 1))
+}
+
+
+

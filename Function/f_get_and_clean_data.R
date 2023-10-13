@@ -102,6 +102,7 @@ get_stock_data <- function(tickers) {
   # # Combine all data frames in the list into a single data frame
   combined_data <- do.call(rbind, data_list)
   
+  save(combined_data, file = here("Clean_Data", "stock_data2.rda"))
   
   return(combined_data)
 }
@@ -111,8 +112,8 @@ f_get_price_data <- function() {
   ### Cette fonction retrouve les données de volatilités des constituants du NASDAQ 100 choisit.
   ### La fonction ne prend pas d'entrée car les données sont directement tirées du répertoire Raw_Data.
   ### Ces données sont :
-  ###    1) data_price.rda : Données de prix des constituants du NASDAQ 100 choisit
-  ###       [Source : OptionMetrics. "Securities - Secutirty Prices WRDS". https://wrds-www.wharton.upenn.edu/pages/get-data/optionmetrics/ivy-db-us/securities/security-prices/. 2023.
+  ###    1) data_price.rda : Données de prix des constituants du NASDAQ 100 choisit.
+  ###       
   
   #  OUTPUTS
   #   xts_price: [xts_object] (N x C) de prix journalier des constituants choisit
@@ -155,6 +156,7 @@ f_clean_price_data <- function(df_price, ticker) {
   
   return(xts_price)                                             
 }
+
 f_get_vol_data <- function() {
   
   ### Cette fonction retrouve les données de volatilités des constituants du NASDAQ 100 choisit.
@@ -211,7 +213,7 @@ f_clean_vol_data <- function(df_vol, days_to_expiry, ticker) {
   xts_vol <- apply(xts_vol, 2, na.locf)                   
   xts_vol <- as.xts(xts_vol)                                
   index(xts_vol) <- as.Date(index(xts_vol))                
-  cat("Processing vol. data:", ticker, "\n")
+  
   return(xts_vol)
   
 }

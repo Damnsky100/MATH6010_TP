@@ -1,7 +1,6 @@
 f_source_functions <- function() {
   ### Cette fonction load toutes les librairies et fonctions utilisées.
   library("xts")
-  library("here")
   library("zoo")
   library("quantmod")
   library("TTR")
@@ -23,5 +22,6 @@ f_source_functions <- function() {
   source(here("Function", "f_build_strategies.R"))
   source(here("Function", "f_trading.R"))
   source(here("Function", "f_generate_reports.R"))
-  source(here("Function", "f_create_training_data_classification.R"))
+  source(here("Function", "f_regression_functions.R"))
+  source(here("Function", "f_classification_functions.R"))
 }
