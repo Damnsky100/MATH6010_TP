@@ -34,7 +34,6 @@ f_train_classification <- function(start_date, end_date) {
                       metric='Accuracy',
                       tuneGrid=tunegrid,
                       trControl=control)
-  print(rf_default)
   return(rf_default)
 }
 
