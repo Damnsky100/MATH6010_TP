@@ -1,5 +1,5 @@
 #################################
-##### Generate the reports #####
+##### GENERATE REPORTS #########
 ################################
 
 # Retrieve the equity curves
@@ -16,3 +16,4 @@ print(risk_metrics["Trades_statistics"])
 # Plots
 
 f_call_plots(equity_curves)
+

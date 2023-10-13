@@ -1,5 +1,5 @@
 #############################
-### Clustering Algorithm ###
+### CLUSTERING ALGORITHM ###
 ############################
 
 # Retrieve and clean the data
@@ -10,7 +10,7 @@ f_clean_data_clustering()
 stocks_symbols <- f_cluster(10)
 
 ########################
-### Data collection ###
+### DATA COLLECTION ###
 #######################
 
 # Retrieve stock information from quantmod
