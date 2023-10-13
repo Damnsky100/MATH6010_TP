@@ -363,7 +363,6 @@ init_instance = function(dataPrice, tickers) {
     )
     predictionMatrix[, tick] <- results$predictions
     
-    #print(paste(elasticNet_pred$tickers[tick], ", Finished, MSE:", resultsList[[tick]]$mse))
   }
   
   elasticNet_pred$resultsList <- resultsList

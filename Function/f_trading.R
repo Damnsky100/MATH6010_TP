@@ -58,12 +58,6 @@ f_run_strategy <- function(start_date, end_date, list_ratios_technicals, strateg
   # Save trades
   name_file <- paste0("df_all_trades_", strategy,"_",start_date,"_to_", end_date,".rda")
   save(df_all_trades, file = here('Output', name_file))
-  cat(paste("Trades saved under:", name_file, "\n"))
-  
-  name_file_xlsx <- paste0("df_all_trades_", strategy,"_",start_date,"_to_", end_date,".xlsx")
-  write_xlsx(df_all_trades, path = here('Output', name_file_xlsx))
-  cat(paste("Trades saved under:", name_file_xlsx, "\n"))
-  
   
   ### Create equity curve ###
   

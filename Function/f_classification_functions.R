@@ -1,16 +1,29 @@
 f_train_classification <- function(start_date, end_date) {
+  ### Cette fonction applique l'algorithme de classification (Random Forest).
   
+  # Inputs:
+  #   start_date: [Date] La date de debut du training set.
+  #   end_date: [Date]  La date de fin du training set.
+  #
+  # Outputs
+  #   rf_default: Le modèle de random forest estimé.
+  
+  # Load data
   load(here("Clean_Data", "trade_classification_is.rda"))
+  
   dataset <- trade_classification
   dataset$PL_position.1 <- factor(dataset$PL_position.1, levels = c("0", "1"))
   y <- dataset$PL_position.1
   x <- dataset[, -which(names(dataset) == "PL_position.1")]
+  
   #10 folds repeat 3 times
   control <- trainControl(method='repeatedcv',
                           number=10,
                           repeats=3)
+  
   #Metric compare model is Accuracy
   set.seed(1234)
+  
   #Number randomly variable selected is mtry
   mtry <- sqrt(ncol(x))
   tunegrid <- expand.grid(.mtry=mtry)
@@ -26,6 +39,15 @@ f_train_classification <- function(start_date, end_date) {
 }
 
 f_create_training_data_classification <- function(start_date, end_date){
+  ### Cette fonction regroupe les données in sample
+  ### requises pour entrainer l'algorithme de classification.
+  
+  # Inputs:
+  #   start_date: [Date] La date de debut du training set.
+  #   end_date: [Date]  La date de fin du training set.
+  #
+  # Outputs
+  #   rf_default: Le dataset de training pour l'algo.
   
   # Data.frame construit à partir des données Bloomberg
   merged_df <- read.csv(here("Raw_Data", "classification_data.csv"))
@@ -65,6 +87,15 @@ f_create_training_data_classification <- function(start_date, end_date){
 }
 
 f_create_test_data_classification <- function(list_ratios_technicals){
+  ### Cette fonction regroupe les données out-of-sample 
+  ### requises pour l'algorithme de classification.
+  ### Elle utilise des données de BBG qui se trouve dans le classification_data.csv.
+  
+  # Inputs:
+  #   list_ratios_technicals: [List] Liste de ratios techniques de chaque paire
+
+  # Outputs
+  #   merged_list: [List] Liste contenant les données requises.
   
   # Read the CSV file
   df <- read.csv(here("Raw_data", "classification_data.csv"))
@@ -134,6 +165,15 @@ f_create_test_data_classification <- function(list_ratios_technicals){
 }
 
 f_classification_prediction <- function(merged_list_element, classification_model){
+  ### Cette fonction applique le modèle de random forest qui a été estimé et 
+  ### determine les prédictions de profitabilité pour le data set donné.
+  
+  # Inputs:
+  #   merged_list_element: [List] Liste contenant les données requises.
+  #   classification_model: Modèle de random forest estimé
+  # Outputs
+  #   class_prediction_xts: [List] Liste d'objet xts qui contient les prédictions.
+  
   # Save the original merged_list_element as tmp
   tmp <- merged_list_element
   
