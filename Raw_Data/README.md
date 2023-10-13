@@ -64,3 +64,21 @@ Sous 'Ivy DB Us', sélectionner 'Options' puis sélectionner 'Options'
 Étape 4 : Slectionner .CSV comme output format
 
 Étape 5 : Lancer la requête
+
+# 4 : Données de classification
+
+Accéder à un terminal Bloomberg avec les identifiants fournis par le laboratoire de la salle de marchés
+
+Dans excel, utiliser l'onglet bloomberg en haut de la spread sheet afin de cliquer sur spreadsheet builder
+
+Étape 1 : Sélectionner 2008-01-01 à 2022-12-31 comme date
+
+Étape 2 : Sélectionner les tickers voulus
+
+Étape 3 : Sélectionner les variables "Market Cap", "Bloomberg 1 year distance to default", "Volume total call", "Volume total put", "open int total call", "open int total put", "Latest earnings date", "Stock volume", "Put Call Volume ratio", "Put Call open interest ratio", "Short interest equity float"
+
+Étape 4 : Selectionner .CSV comme output format
+
+Étape 5 : Lancer la requête
+
+
