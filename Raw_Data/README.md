@@ -81,4 +81,18 @@ Dans excel, utiliser l'onglet bloomberg en haut de la spread sheet afin de cliqu
 
 Étape 5 : Lancer la requête
 
+# 5 : Données de régression 
+
+Accéder à Yahoo Finance via la librairie "quantmod" et utiliser la fonction getSymbols()
+
+Étape 1 : Sélectionner la date de 2008-01-01 à 2022-12-31
+
+Étape 2 : Sélectionner les tickers voulus
+
+Étape 4 : Sélectionner la source : Yahoo Finance
+
+Étape 5 : Rouler la fontion getSymbols()
+
+Étape 6 : Sélectionner les variables : "Open", "Adjusted Close", "High", "Low", "Volume"
+
 
