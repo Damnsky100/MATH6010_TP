@@ -130,7 +130,7 @@ f_risk_metrics <- function(equity_curves, all_trades, risk_free) {
   both_metrics <- calculate_metrics(Ensemble, equity_curves$Ensemble, 0.025)
   # Group the information
   Portfolio_statistics <- cbind(naive_metrics, regression_metrics, classification_metrics, both_metrics)
-  colnames(Portfolio_statistics) <- c("Naive", "Regression", "Classification", "Both")
+  colnames(Portfolio_statistics) <- c("de Base", "Stategie 1", "Stategie 2", "Stategie 3")
   
   # Calculate some interesting information about the trades
   calculate_statistics <- function(df) {
@@ -200,10 +200,10 @@ f_call_plots <- function(equity_curves, all_trades_list){
                   "Regression_trades" = "#7CAE00",
                   "Classification_trades" = "#F8766D",
                   "Both_trades" = "#C77CFF")
-  title_dict <- c("Naive_trades" = "Valeur des transactions (Naive)",
-                  "Regression_trades" = "Valeur des transactions (Régression)",
-                  "Classification_trades" = "Valeur des transactions (Classification)",
-                  "Both_trades" = "Valeur des transactions (Ensemble)")
+  title_dict <- c("Naive_trades" = "P&L par transaction (Stratégie de Base)",
+                  "Regression_trades" = "P&L par transaction (Stratégie 2)",
+                  "Classification_trades" = "P&L par transaction (Stratégie 3)",
+                  "Both_trades" = "P&L par transaction (Stratégie 3)")
   
   methods <- names(color_dict)
   
