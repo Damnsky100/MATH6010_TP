@@ -37,7 +37,6 @@ f_cluster <- function(K) {
   portfolio <- as.vector(portfolio)
   portfolio$'TICKER SYMBOL'
   
-  print(portfolio$'TICKER SYMBOL')
 }
 
 f_run_price_regressions <- function(stocks_symbols) {

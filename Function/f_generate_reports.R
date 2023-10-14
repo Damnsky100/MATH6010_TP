@@ -174,16 +174,20 @@ f_call_plots <- function(equity_curves, all_trades_list){
   # Melt the data
   df <- pivot_longer(equity_curves, -Date, names_to = "Method", values_to = "Value")
   
+  labels_rename <- c(Naive = "Stratégie de Base", Regression = "Stratégie 1", Classification = "Stratégie 2", Ensemble = "Stratégie 3")
+  
+  ordered_methods <- c("Naive", "Regression", "Classification", "Ensemble")
   # Plot
   p1 <- ggplot(df, aes(x = Date, y = Value, color = Method)) +
     geom_line(linewidth = 1) +
     theme_minimal() +
     labs(title = "Valeur total des portefeuilles", x = "Date", y = "Dollars") +
-    scale_color_discrete(name = "Stratégies:") +
+    scale_color_discrete(name = "Stratégies:", breaks = ordered_methods, labels = labels_rename) +
     theme(axis.text = element_text(face = "bold", size = 12),
           axis.title = element_text(face = "bold", size = 12),
-          plot.title = element_text(hjust = 0.5, size = 18),
-          legend.position = "top",
+          plot.title = element_text(hjust = 0.5, size = 24),
+          legend.position = c(0, 1),
+          legend.justification = c(0, 1),
           legend.title = element_text(size = 14),
           legend.text = element_text(size = 12),
           panel.border = element_rect(colour = "black", fill = NA, size = 1))
@@ -197,12 +201,12 @@ f_call_plots <- function(equity_curves, all_trades_list){
   # Save the name of the strats
   strats <- names(all_trades_list)
   color_dict <- c("Naive_trades" = "#00BFC4",
-                  "Regression_trades" = "#7CAE00",
+                  "Regression_trades" = "#C77CFF",
                   "Classification_trades" = "#F8766D",
-                  "Both_trades" = "#C77CFF")
+                  "Both_trades" = "#7CAE00")
   title_dict <- c("Naive_trades" = "P&L par transaction (Stratégie de Base)",
-                  "Regression_trades" = "P&L par transaction (Stratégie 2)",
-                  "Classification_trades" = "P&L par transaction (Stratégie 3)",
+                  "Regression_trades" = "P&L par transaction (Stratégie 1)",
+                  "Classification_trades" = "P&L par transaction (Stratégie 2)",
                   "Both_trades" = "P&L par transaction (Stratégie 3)")
   
   methods <- names(color_dict)
@@ -219,7 +223,7 @@ f_call_plots <- function(equity_curves, all_trades_list){
       labs(title=title_dict[method], x="Dollars", y="Fréquence") +
       theme(axis.text = element_text(face = "bold", size = 12),
             axis.title = element_text(face = "bold", size = 12),
-            plot.title = element_text(hjust = 0.5, size = 18),
+            plot.title = element_text(hjust = 0.5, size = 24),
             legend.position = "top",
             legend.title = element_text(size = 14),
             legend.text = element_text(size = 12),

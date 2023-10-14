@@ -102,7 +102,7 @@ get_stock_data <- function(tickers) {
   # # Combine all data frames in the list into a single data frame
   combined_data <- do.call(rbind, data_list)
   
-  save(combined_data, file = here("Clean_Data", "stock_data2.rda"))
+  save(combined_data, file = here("Clean_Data", "stock_data.rda"))
   
   return(combined_data)
 }
