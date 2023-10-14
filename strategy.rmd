@@ -1,0 +1,86 @@
+---
+title: "MATH 60610"
+author: "Jonathan Andrew Guay, Sébastien Caron, William Delisle, Xavier Marcoux"
+date: "2023-10-13"
+output: html_document
+---
+
+### **MÉTHODES D'APPRENTISSAGE APPLIQUÉES AUX DONNÉES FINANCIÈRES** 
+## TP A 
+
+L'objectif de ce projet est d'utiliser certaines méthodes d'apprentrissage 
+afin d'améliorer la performance d'une stratégie de trading de base.
+
+##  
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("here")
+
+# Source the functions and librairies
+source(here("Function", "f_source_functions.R"))
+f_source_functions()
+```
+
+## Importation des données (Run_data)
+
+Pour débuter, nous appliquons un algorithm de clustering sur les titres qui du NASDAQ 100. Le résultat, affiché ci-bas, determinera notre univers de titres pour la stratégie de trading.  Par la suite, nous importons plusieurs sources de données externes.
+
+* Importer les donées financières des compagnies dans le NASDAQ 100 pour l'année 2007.
+* Executer l'algorithm de clustering pour selectrionner les titres de la stratégie.
+* Importer et nettoyer les données de prix des titres choisit.
+* Importer et nettoyer les données de volatilité des titres choisit.
+* Importer et nettoyer les données de classification des titres choisit.
+
+```{r}
+source(here("run_data.R"))
+```
+## Stratégie de trading (Run_strategy)
+
+Une fois les titres choisit et les données importées, nous allons completer plusieurs étapes afin d'éxecuter la stratégie de trading.
+
+1. Signaux techniques
+  * Determiner toutes les combinaison de paires possibles.
+  * Création des ratios de volatilités ainsi que les indicateurs requis (*Moving Average* et *Standard Deviation*)
+
+2. Stratégie de trading (*In-sample*)
+  * Executer la strategie de trading sur les données 01/01/2008 à 31/12/2017. 
+  * Sauvegarder les transactions executées.
+
+3. Regression
+  * Calculer plusieurs indicateurs techniques utilisé comme prédicteurs.
+  * Estimer les modèles pour chaque titres avec la regression *Elastic Net*.
+  * Predire les rendements dans 10 jours, pour chaque pas de temps *Out-of-sample*.
+
+4. Classification
+  * Recupérer les transactions de trading *In-sample*
+  * Estimer le modèle de classification par *Random Forest*
+  
+5. Stratégie de trading (*Out-of-sample*)
+  * Joinde les prédictions des deux modèles pour chaque pas de temps *Out-of-sample*.
+  * Executer les stratégies de trading.
+    * Naive
+    * Regression
+    * Classification
+    * Combinées
+  * Sauvegarder les transactions et les résultats.
+
+
+```{r message=FALSE, warning=FALSE}
+source(here("run_strategy.R"))
+```
+
+## Rapport (Run_outputs)
+
+Pour conclure, nous allons regrouper certaines informations pertinentes tel que des mesures de risques ainsi que des informations concernant les transactions.
+
+```{r message=FALSE, warning=FALSE}
+source(here("run_outputs.R"))
+```
+
+
+
+
+
+
+
